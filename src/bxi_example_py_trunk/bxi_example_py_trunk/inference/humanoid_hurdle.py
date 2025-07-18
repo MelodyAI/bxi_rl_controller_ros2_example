@@ -1,5 +1,4 @@
 
-import torch
 import os.path as osp
 import numpy as np
 from typing import Dict

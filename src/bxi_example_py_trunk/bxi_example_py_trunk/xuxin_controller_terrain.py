@@ -17,8 +17,7 @@ import math
 from std_msgs.msg import Header,Float32MultiArray
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import JointState
-import torch
-from bxi_example_py_trunk.inference.humanoid_dh_long import humanoid_dh_long_Agent
+# from bxi_example_py_trunk.inference.humanoid_dh_long import humanoid_dh_long_Agent
 from bxi_example_py_trunk.inference.humanoid_dh_long_onnx import humanoid_dh_long_onnx_Agent
 # from bxi_example_py_trunk.inference.humanoid_hurdle import humanoid_hurdle_onnx_Agent
 from bxi_example_py_trunk.inference.humanoid_hurdle_history import humanoid_hurdle_onnx_Agent

@@ -10,14 +10,12 @@ import nav_msgs.msg
 import sensor_msgs.msg
 from threading import Lock
 import numpy as np
-# import torch
 import time
 import sys
 import math
 from std_msgs.msg import Header
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import JointState
-import torch
 from bxi_example_py_trunk.inference.humanoid_dh_long import humanoid_dh_long_Agent
 from bxi_example_py_trunk.inference.humanoid_dh_long_onnx import humanoid_dh_long_onnx_Agent
 

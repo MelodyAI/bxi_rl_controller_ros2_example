@@ -1,4 +1,3 @@
-import torch
 import numpy as np
 from bxi_example_py_trunk.inference.base_agent import baseAgent
 from bxi_example_py_trunk.inference.exp_filter import expFilter
