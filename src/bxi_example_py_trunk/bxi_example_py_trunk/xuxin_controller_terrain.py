@@ -193,10 +193,11 @@ class BxiExample(Node):
         self.timer = self.create_timer(self.dt, self.timer_callback, callback_group=self.timer_callback_group_1)
 
         # obstacle play
-        total_play_time = 0.6
+        total_play_time = 0.9 # 0.9m高程图长度 1m/s速度
         self.total_play_count = total_play_time/self.dt
         self.obstacle_height = 0.3
         self.play_count = self.total_play_count + 999
+        self.prev_jump_btn = False
     
     def obstacle_play_command_callback(self):
         print("start play obstacle")
@@ -268,10 +269,6 @@ class BxiExample(Node):
                 y_vel_cmd = self.vy
                 yaw_vel_cmd = self.dyaw
                 height_map = self.height_map
-
-            # if self.loop_count % 500 ==0:
-            #     "每隔10秒放一次障碍信号"
-            #     self.obstacle_play_command_callback()
 
             self.obstacle_play_update()
                                            
@@ -364,6 +361,20 @@ class BxiExample(Node):
             self.vx = msg.vel_des.x
             self.vy = msg.vel_des.y
             self.dyaw = msg.yawdot_des
+
+            jump_btn = msg.btn_4 # BT4 = Y按钮控制发送障碍高程图
+ 
+            # 上升沿
+            left_btn_pressed = (jump_btn and not self.prev_jump_btn)
+            
+            if left_btn_pressed:  # BT6状态发生变化
+                if self.play_count < self.total_play_count:
+                    # 正在发送中 不重复发送
+                    pass
+                else:
+                    self.obstacle_play_command_callback()
+                    
+            self.prev_jump_btn = jump_btn
 
     def imu_callback(self, msg):
         quat = msg.orientation
