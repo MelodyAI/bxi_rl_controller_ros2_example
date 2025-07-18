@@ -7,9 +7,6 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
 
-    xml_file_name = "model/xml/elf2-ankle/elf2_ankle_dof25.xml"
-    xml_file = os.path.join(get_package_share_path("description"), xml_file_name)
-
     policy_file_name = "policy/model_xx.jit"
     policy_file = os.path.join(get_package_share_path("bxi_example_py_trunk"), policy_file_name)
 
@@ -19,12 +16,11 @@ def generate_launch_description():
     return LaunchDescription(
         [
             Node(
-                package="mujoco",
-                executable="simulation",
-                name="simulation_mujoco",
+                package="hardware_ankle",
+                executable="hardware_ankle",
+                name="hardware_ankle",
                 output="screen",
                 parameters=[
-                    {"simulation/model_file": xml_file},
                 ],
                 emulate_tty=True,
                 arguments=[("__log_level:=debug")],
@@ -36,8 +32,8 @@ def generate_launch_description():
                 name="xuxin_controller_terrain",
                 output="screen",
                 parameters=[
-                    {"/topic_prefix": "simulation/"},
-                    {"/policy_file": policy_file},
+                    {"/topic_prefix": "hardware/"},
+                    {"/policy_file": policy_file}, # not used
                     {"/policy_file_onnx": policy_file_onnx},
                 ],
                 emulate_tty=True,

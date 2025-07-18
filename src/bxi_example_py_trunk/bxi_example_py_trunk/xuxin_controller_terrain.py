@@ -269,9 +269,9 @@ class BxiExample(Node):
                 yaw_vel_cmd = self.dyaw
                 height_map = self.height_map
 
-            if self.loop_count % 500 ==0:
-                "每隔10秒放一次障碍信号"
-                self.obstacle_play_command_callback()
+            # if self.loop_count % 500 ==0:
+            #     "每隔10秒放一次障碍信号"
+            #     self.obstacle_play_command_callback()
 
             self.obstacle_play_update()
                                            

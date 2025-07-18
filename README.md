@@ -61,6 +61,11 @@ ros2 launch bxi_example_py example_launch.py
 ros2 launch bxi_example_py_trunk example_launch.py
 ros2 launch bxi_example_py_trunk example_launch_xx.py
 ros2 launch bxi_example_py_trunk example_launch_xx_terrain.py
+ros2 launch bxi_example_py_trunk example_launch_xx_terrain_hw.py
+
+export ROS_DOMAIN_ID=19
+sudo su
+ros2 launch remote_controller remote_conroller_launch.py # 
 ```
 
 ### 硬件保护

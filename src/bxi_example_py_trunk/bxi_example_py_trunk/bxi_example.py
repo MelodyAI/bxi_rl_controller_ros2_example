@@ -30,7 +30,7 @@ dof_num = 25
 
 dof_use = 12
 
-ankle_y_offset = 0.04
+ankle_y_offset = 0.0
 
 joint_name = (
     "waist_y_joint",
