@@ -166,7 +166,7 @@ class BxiExample(Node):
         self.imu_sub = self.create_subscription(sensor_msgs.msg.Imu, self.topic_prefix+'imu_data', self.imu_callback, qos)
         self.touch_sub = self.create_subscription(bxiMsg.TouchSensor, self.topic_prefix+'touch_sensor', self.touch_callback, qos)
         self.joy_sub = self.create_subscription(bxiMsg.MotionCommands, 'motion_commands', self.joy_callback, qos)
-        self.height_map_sub = self.create_subscription(Float32MultiArray,'/robot_height_map',self.height_map_callback,qos)
+        self.height_map_sub = self.create_subscription(Float32MultiArray,'/elevation_matrix_extractor',self.height_map_callback,qos)
 
         self.rest_srv = self.create_client(bxiSrv.RobotReset, self.topic_prefix+'robot_reset')
         self.sim_rest_srv = self.create_client(bxiSrv.SimulationReset, self.topic_prefix+'sim_reset')
@@ -185,7 +185,7 @@ class BxiExample(Node):
         self.vx = 0.1
         self.vy = 0
         self.dyaw = 0
-        self.height_map = 1.1 - np.zeros(18*9,dtype=np.double) # base_pos_z - height
+        self.height_map = 1.05 - np.zeros(18*9,dtype=np.double) # base_pos_z - height
 
         self.step = 0
         self.loop_count = 0
@@ -219,11 +219,11 @@ class BxiExample(Node):
             
             # 20[0:4]cm障碍的高程图 地图90cm[0:18]
             blank_map[start_index:end_index,:] = self.obstacle_height
-            self.height_map = (1.1 - blank_map).flatten()
+            self.height_map = (1.05 - blank_map).flatten()
             self.play_count += 1
         else:
             blank_map = np.zeros((18,9),dtype=np.double)
-            self.height_map = (1.1 - blank_map).flatten()
+            self.height_map = (1.05 - blank_map).flatten()
 
     def timer_callback(self):
         
@@ -286,7 +286,7 @@ class BxiExample(Node):
                 "height_map":height_map,
             }
             np.set_printoptions(formatter={'float': '{:.2f}'.format})
-            # print(height_map)
+            print(height_map)
             target_q = self.agent.inference(obs_group)
             
             qpos = joint_nominal_pos.copy()
@@ -397,12 +397,13 @@ class BxiExample(Node):
         try:
             # 将一维数组转换为18×9的高程图
             height_map_data = np.array(msg.data, dtype=np.double)
-            height_map = height_map_data
-            
-            # 更新高程图数据（使用互斥锁保护）
+            h = height_map_data.reshape(25,9)
+            h = h[:18]
+            h = np.flip(h, axis=[0,1])
+            h = h.flatten()
+            h = - h - 0.228
             with self.lock_in:
-                # self.height_map = height_map
-                pass
+                self.height_map = h
 
         except Exception as e:
             self.get_logger().error(f"处理高程图数据失败: {str(e)}")
