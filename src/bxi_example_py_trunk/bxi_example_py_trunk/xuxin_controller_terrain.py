@@ -14,7 +14,7 @@ import numpy as np
 import time
 import sys
 import math
-from std_msgs.msg import Header
+from std_msgs.msg import Header,Float32MultiArray
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import JointState
 import torch
@@ -25,7 +25,8 @@ from bxi_example_py_trunk.inference.humanoid_hurdle_history import humanoid_hurd
 
 import onnxruntime as ort
 
-from std_msgs.msg import Float32MultiArray
+import termios
+import select
 
 robot_name = "elf25"
 
@@ -192,6 +193,38 @@ class BxiExample(Node):
         self.dt = 0.02  # loop @100Hz # TODO:
         self.timer = self.create_timer(self.dt, self.timer_callback, callback_group=self.timer_callback_group_1)
 
+        # obstacle play
+        total_play_time = 0.6
+        self.total_play_count = total_play_time/self.dt
+        self.obstacle_height = 0.3
+        self.play_count = self.total_play_count + 999
+    
+    def obstacle_play_command_callback(self):
+        print("start play obstacle")
+        self.play_count = 0
+
+    def obstacle_play_update(self):
+        "播放一个20cm障碍的高程图"
+        if self.play_count < self.total_play_count:
+            percentage = self.play_count/self.total_play_count
+            print(f"obstacle percentage:{percentage}")
+            
+            blank_map = np.zeros((18,9),dtype=np.double)
+            start_index = int(18 - percentage * 18)
+            start_index = min(start_index,17)
+            start_index = max(start_index,0)
+            end_index = int(start_index + 4)
+            end_index = min(18,end_index)
+            end_index = max(0,end_index)
+            
+            # 20[0:4]cm障碍的高程图 地图90cm[0:18]
+            blank_map[start_index:end_index,:] = self.obstacle_height
+            self.height_map = (1.1 - blank_map).flatten()
+            self.play_count += 1
+        else:
+            blank_map = np.zeros((18,9),dtype=np.double)
+            self.height_map = (1.1 - blank_map).flatten()
+
     def timer_callback(self):
         
         # ptyhon 与 rclpy 多线程不太友好，这里使用定时间+简易状态机运行a
@@ -236,6 +269,12 @@ class BxiExample(Node):
                 y_vel_cmd = self.vy
                 yaw_vel_cmd = self.dyaw
                 height_map = self.height_map
+
+            if self.loop_count % 500 ==0:
+                "每隔10秒放一次障碍信号"
+                self.obstacle_play_command_callback()
+
+            self.obstacle_play_update()
                                            
             dof_pos = q
             dof_vel = dq
