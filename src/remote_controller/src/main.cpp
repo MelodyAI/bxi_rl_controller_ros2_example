@@ -108,6 +108,7 @@ private:
     int mode = 0;
     bool left_arm_toggle = false;   // 左手挥舞切换状态
     bool right_arm_toggle = false;  // 右手握手切换状态
+    bool jump_toggle = false;  // 发送障碍高程图
 
     double vel_offset = 0.0;
 
@@ -156,8 +157,9 @@ private:
             message.mode = mode;
 
             // 设置手臂控制标志
-            // message.btn_6 = left_arm_toggle ? 1 : 0;    // BT6控制左手挥舞
-            // message.btn_7 = right_arm_toggle ? 1 : 0;   // BT7控制右手握手
+            message.btn_4 = jump_toggle ? 1 : 0;    // 发送障碍高程图
+            message.btn_6 = left_arm_toggle ? 1 : 0;    // BT6控制左手挥舞
+            message.btn_7 = right_arm_toggle ? 1 : 0;   // BT7控制右手握手
 
             height_filt = height_filt * 0.9 + stand_height * 0.1;
             message.height_des = height_filt;
@@ -201,6 +203,8 @@ private:
                             system("killall -SIGINT hardware_trunk");
                             system("killall -SIGINT hardware_trunk_neck");
                             system("killall -SIGINT hardware_ankle");
+                            system("killall -SIGINT xuxin_controller_terrain");
+                            system("killall -SIGINT simulation");// mujoco
                             printf("kill robot_controller\n");//robot_controller
 
                             reset_value();
@@ -243,6 +247,7 @@ private:
                         case JS_GAIT_WALK_BT:{
                             const std::lock_guard<std::mutex> guard(lock_);
                             vel_offset = 0.0011;
+                            jump_toggle = !jump_toggle;
                             printf("change to walk\n");
                         }
                         break;

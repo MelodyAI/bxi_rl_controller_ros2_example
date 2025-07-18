@@ -364,10 +364,8 @@ class BxiExample(Node):
 
             jump_btn = msg.btn_4 # BT4 = Y按钮控制发送障碍高程图
  
-            # 上升沿
-            left_btn_pressed = (jump_btn and not self.prev_jump_btn)
-            
-            if left_btn_pressed:  # BT6状态发生变化
+            jump_btn_changed = (jump_btn != self.prev_jump_btn)
+            if jump_btn_changed:
                 if self.play_count < self.total_play_count:
                     # 正在发送中 不重复发送
                     pass
