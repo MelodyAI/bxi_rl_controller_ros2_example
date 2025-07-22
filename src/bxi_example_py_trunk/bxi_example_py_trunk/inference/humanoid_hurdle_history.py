@@ -60,6 +60,7 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
             "dof_vel":np.zeros(23,dtype=float),
             "angular_velocity":np.zeros(3,dtype=float),
             "commands":np.zeros(3,dtype=float),
+            "yaw_delta":np.zeros(2,dtype=float),
             "projected_gravity":np.zeros(3,dtype=float),
             "height_map":np.zeros(18*9),
         }
@@ -73,10 +74,11 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
         obs_base_ang_vel = obs_group["angular_velocity"] * self.obs_scale["ang_vel"]
         obs_commands = obs_group["commands"]
         obs_height_map = (obs_group["height_map"] - 1.0) * self.obs_scale["height_measurements"]
+        obs_yaw_delta = obs_group["yaw_delta"]
 
         # 本体感知proprioception 9+69+162=240
         prop_obs = np.concatenate((
-            np.array([obs_commands[2], 0, obs_commands[0]]), # 3
+            np.array([obs_yaw_delta[0], obs_yaw_delta[1], obs_commands[0]]), # 3
             obs_base_ang_vel, # 3
             obs_projected_gravity, # 3
             obs_dof_pos, # 23
@@ -122,6 +124,7 @@ if __name__=="__main__":
         "angular_velocity":np.zeros(3),
         "projected_gravity":np.zeros(3),
         "commands":np.zeros(3),
+        "yaw_delta":np.zeros(2,dtype=float),
         "height_map":np.zeros(18*9)
     }
     np.set_printoptions(formatter={'float': '{:.2f}'.format})

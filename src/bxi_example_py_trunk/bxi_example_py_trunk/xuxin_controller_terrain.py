@@ -183,8 +183,8 @@ class BxiExample(Node):
         self.agent = humanoid_hurdle_onnx_Agent(self.policy_file_onnx)
         
         self.vx = 0.1
-        self.vy = 0
-        self.dyaw = 0
+        self.vy = 0.
+        self.dyaw = 0.
         self.height_map = 1.05 - np.zeros(18*9,dtype=np.double) # base_pos_z - height
 
         self.step = 0
@@ -199,6 +199,8 @@ class BxiExample(Node):
         self.play_count = self.total_play_count + 999
         self.prev_jump_btn = False
     
+        self.target_yaw = 0
+
     def obstacle_play_command_callback(self):
         print("start play obstacle")
         self.play_count = 0
@@ -277,6 +279,17 @@ class BxiExample(Node):
             quat = self.quat
             g_vec = np.array([0.,0.,-1.])
             p_g_vec = quat_rotate_inverse(quat,g_vec)
+
+            x, y, z, w = quat
+            t3 = +2.0 * (w * z + x * y)
+            t4 = +1.0 - 2.0 * (y * y + z * z)
+            self.base_yaw = np.arctan2(t3, t4)
+
+            if abs(self.dyaw) < 0.1: self.dyaw = 0 # 死区
+            self.target_yaw += self.dyaw * self.dt
+            yaw_delta = (self.target_yaw - self.base_yaw + np.pi) % (2*np.pi) - np.pi
+            # print(self.target_yaw, self.base_yaw, yaw_delta)
+
             obs_group={
                 "dof_pos":dof_pos,
                 "dof_vel":dof_vel,
@@ -284,6 +297,7 @@ class BxiExample(Node):
                 "commands":np.array([x_vel_cmd, y_vel_cmd, yaw_vel_cmd]),
                 "projected_gravity":p_g_vec,
                 "height_map":height_map,
+                "yaw_delta":np.array([yaw_delta,yaw_delta]),
             }
 
             target_q = self.agent.inference(obs_group)
