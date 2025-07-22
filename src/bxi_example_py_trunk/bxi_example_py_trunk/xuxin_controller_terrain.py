@@ -285,9 +285,14 @@ class BxiExample(Node):
             t4 = +1.0 - 2.0 * (y * y + z * z)
             self.base_yaw = np.arctan2(t3, t4)
 
+            ang_scale = 2.
+            lin_scale = 2.
+            self.dyaw *= ang_scale
+            x_vel_cmd *= lin_scale
             if abs(self.dyaw) < 0.1: self.dyaw = 0 # 死区
             self.target_yaw += self.dyaw * self.dt
             yaw_delta = (self.target_yaw - self.base_yaw + np.pi) % (2*np.pi) - np.pi
+            # print(x_vel_cmd)
             # print(self.target_yaw, self.base_yaw, yaw_delta)
 
             obs_group={

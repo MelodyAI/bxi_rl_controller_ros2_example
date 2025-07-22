@@ -50,7 +50,7 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
         self.clip_action = 100.
 
         self.last_actions_buf = np.zeros(self.num_actions)
-        self.exp_filter = expFilter(0.6)
+        self.exp_filter = expFilter(0.3)
         self.bootstrap()
 
     def bootstrap(self):
