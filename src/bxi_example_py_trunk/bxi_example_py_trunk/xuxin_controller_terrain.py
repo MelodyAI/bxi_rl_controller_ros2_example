@@ -166,7 +166,7 @@ class BxiExample(Node):
         self.imu_sub = self.create_subscription(sensor_msgs.msg.Imu, self.topic_prefix+'imu_data', self.imu_callback, qos)
         self.touch_sub = self.create_subscription(bxiMsg.TouchSensor, self.topic_prefix+'touch_sensor', self.touch_callback, qos)
         self.joy_sub = self.create_subscription(bxiMsg.MotionCommands, 'motion_commands', self.joy_callback, qos)
-        self.height_map_sub = self.create_subscription(Float32MultiArray,'/elevation_matrix_extractor',self.height_map_callback,qos)
+        self.height_map_sub = self.create_subscription(Float32MultiArray,'/extracted_elevation_matrix',self.height_map_callback,qos)
 
         self.rest_srv = self.create_client(bxiSrv.RobotReset, self.topic_prefix+'robot_reset')
         self.sim_rest_srv = self.create_client(bxiSrv.SimulationReset, self.topic_prefix+'sim_reset')
@@ -285,8 +285,7 @@ class BxiExample(Node):
                 "projected_gravity":p_g_vec,
                 "height_map":height_map,
             }
-            np.set_printoptions(formatter={'float': '{:.2f}'.format})
-            print(height_map)
+
             target_q = self.agent.inference(obs_group)
             
             qpos = joint_nominal_pos.copy()
@@ -366,6 +365,7 @@ class BxiExample(Node):
  
             jump_btn_changed = (jump_btn != self.prev_jump_btn)
             if jump_btn_changed:
+                print("jump")
                 if self.play_count < self.total_play_count:
                     # 正在发送中 不重复发送
                     pass
@@ -402,6 +402,9 @@ class BxiExample(Node):
             h = np.flip(h, axis=[0,1])
             h = h.flatten()
             h = - h - 0.228
+            np.set_printoptions(formatter={'float': '{:.2f}'.format})
+            print(h)
+
             with self.lock_in:
                 self.height_map = h
 
