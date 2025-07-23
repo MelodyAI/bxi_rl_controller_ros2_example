@@ -80,9 +80,12 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
         obs_projected_gravity = obs_group["projected_gravity"]
         obs_base_ang_vel = obs_group["angular_velocity"] * self.obs_scale["ang_vel"]
         motion_time_norm = self.agent_count * 0.02 * 30 / 167
-        if motion_time_norm > 1.0:
-            motion_time_norm = 1.0
+        if motion_time_norm > 0.9:
+            motion_time_norm = 0
+            self.agent_count = 0
             self.jump =  False
+        print(motion_time_norm)
+
         infer_dt = np.ones((1,))
         difficulty = obs_group["difficulty"]
         # import ipdb; ipdb.set_trace()

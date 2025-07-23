@@ -384,16 +384,27 @@ class BxiExample(Node):
             self.dyaw = msg.yawdot_des
 
             jump_btn = msg.btn_4 # BT4 = Y按钮控制发送障碍高程图
+            if self.step < 2:
+                self.prev_jump_btn = jump_btn
  
             jump_btn_changed = (jump_btn != self.prev_jump_btn)
             if jump_btn_changed:
-                print("jump")
                 if self.play_count < self.total_play_count:
                     # 正在发送中 不重复发送
                     pass
                 else:
-                    self.obstacle_play_command_callback()
+                    # self.obstacle_play_command_callback()
+                    # print("jump")
+                    pass
+                
+                if self.agent.jump:
+                    print("not jump")
+                    self.agent.jump = False
+                    self.agent.reset()
+                else:
+                    print("jump")
                     self.agent.jump = True
+                    self.agent.reset()
                     
             self.prev_jump_btn = jump_btn
 
