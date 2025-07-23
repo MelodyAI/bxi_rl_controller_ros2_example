@@ -56,11 +56,13 @@ https://blog.csdn.net/weixin_55944949/article/details/140373710
 * 运行`ros2 launch bxi_example_py example_launch_hw.py`启动 真机 + 控制程序 （强化学习版）
 ```bash
 source /opt/bxi/bxi_ros2_pkg/setup.bash
+source /home/xuxin/allCode/bxi_ros2_example/bxi_ros2_pkg/setup.bash
 source install/setup.bash
 ros2 launch bxi_example_py example_launch.py
 ros2 launch bxi_example_py_trunk example_launch.py
 ros2 launch bxi_example_py_trunk example_launch_xx.py
 ros2 launch bxi_example_py_trunk example_launch_xx_terrain.py
+ros2 launch bxi_example_py_trunk example_launch_xx_jump.py
 
 ros2 launch bxi_example_py_trunk example_launch_xx_terrain_hw.py
 

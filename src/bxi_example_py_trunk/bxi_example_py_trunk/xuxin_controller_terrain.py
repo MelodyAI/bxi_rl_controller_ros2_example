@@ -18,9 +18,11 @@ from std_msgs.msg import Header,Float32MultiArray
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import JointState
 # from bxi_example_py_trunk.inference.humanoid_dh_long import humanoid_dh_long_Agent
-from bxi_example_py_trunk.inference.humanoid_dh_long_onnx import humanoid_dh_long_onnx_Agent
+# from bxi_example_py_trunk.inference.humanoid_dh_long_onnx import humanoid_dh_long_onnx_Agent
 # from bxi_example_py_trunk.inference.humanoid_hurdle import humanoid_hurdle_onnx_Agent
-from bxi_example_py_trunk.inference.humanoid_hurdle_history import humanoid_hurdle_onnx_Agent
+# from bxi_example_py_trunk.inference.humanoid_hurdle_history import humanoid_hurdle_onnx_Agent
+from bxi_example_py_trunk.inference.humanoid_hurdle_history_new import humanoid_hurdle_onnx_Agent
+
 
 import onnxruntime as ort
 
@@ -294,7 +296,7 @@ class BxiExample(Node):
             yaw_delta = (self.target_yaw - self.base_yaw + np.pi) % (2*np.pi) - np.pi
             # print(x_vel_cmd)
             # print(self.target_yaw, self.base_yaw, yaw_delta)
-
+            difficulty = np.array([1.0])
             obs_group={
                 "dof_pos":dof_pos,
                 "dof_vel":dof_vel,
@@ -303,6 +305,7 @@ class BxiExample(Node):
                 "projected_gravity":p_g_vec,
                 "height_map":height_map,
                 "yaw_delta":np.array([yaw_delta,yaw_delta]),
+                "difficulty": difficulty,
             }
 
             target_q = self.agent.inference(obs_group)
@@ -390,6 +393,7 @@ class BxiExample(Node):
                     pass
                 else:
                     self.obstacle_play_command_callback()
+                    self.agent.jump = True
                     
             self.prev_jump_btn = jump_btn
 

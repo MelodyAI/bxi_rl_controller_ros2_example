@@ -33,6 +33,8 @@ setup(
         ('share/' + package_name + '/launch', ['launch/example_launch_xx.py']),
         ('share/' + package_name + '/launch', ['launch/example_launch_xx_terrain.py']),
         ('share/' + package_name + '/launch', ['launch/example_launch_xx_terrain_hw.py']),
+        ('share/' + package_name + '/launch', ['launch/example_launch_xx_jump.py']),
+        ('share/' + package_name + '/launch', ['launch/example_launch_xx_jump_hw.py']),
         # ('share/' + package_name + '/launch', ['launch/example_launch_hw_slope.py']),
     ] + get_data_files(),
     install_requires=['setuptools'],
