@@ -117,12 +117,9 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
 
         # import ipdb; ipdb.set_trace()
         history_obs = self.build_observations(obs_group).copy()
-        low_obs = np.concatenate([history_obs.flatten(), np.ones([1, ]) * 0.02], axis=-1)  # 240+1
-        high_obs =  history_obs[-1, :]
 
         input_feed = {
-            self.input_names[0]: low_obs.flatten()[None,:].astype(np.float32),
-            self.input_names[1]: high_obs.flatten()[None,:].astype(np.float32),
+            self.input_names[0]: history_obs.flatten()[None,:].astype(np.float32),
         }
         actions = np.squeeze(self.onnx_session.run(["output"], input_feed)) # test
         actions = np.clip(actions, -self.clip_action, self.clip_action)
@@ -145,7 +142,7 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
         self.agent_count = 0
 
 if __name__=="__main__":
-    a=humanoid_hurdle_onnx_Agent("/home/xuxin/allCode/bxi_ros2_example/src/bxi_example_py_trunk/policy/20250723_203911_elf2_dof23_0_adamimic_stage1.onnx")
+    a=humanoid_hurdle_onnx_Agent("/home/xuxin/allCode/bxi_ros2_example/src/bxi_example_py_trunk/policy/20250725_140613_elf2_dof23_noOdometry_0_adamimic_stage1.onnx")
     obs_group={
         "dof_pos":np.zeros(23),
         "dof_vel":np.zeros(23),

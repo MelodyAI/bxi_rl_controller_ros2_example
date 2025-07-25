@@ -83,6 +83,8 @@ joint_kp = np.array([     # 指定关节的kp，和joint_name顺序一一对应
     2,2,1,2,1,
     2,2,1,2,1,
 ], dtype=np.float32)
+# joint_kp [5:8] *= 1.5
+# joint_kp [11:14] *= 1.5
 
 joint_kd = np.array([  # 指定关节的kd，和joint_name顺序一一对应
     5,5,2,
@@ -296,7 +298,7 @@ class BxiExample(Node):
             yaw_delta = (self.target_yaw - self.base_yaw + np.pi) % (2*np.pi) - np.pi
             # print(x_vel_cmd)
             # print(self.target_yaw, self.base_yaw, yaw_delta)
-            difficulty = np.array([1.0])
+            difficulty = np.array([0.55])
             obs_group={
                 "dof_pos":dof_pos,
                 "dof_vel":dof_vel,
