@@ -70,7 +70,9 @@ ros2 launch bxi_example_py_trunk example_launch_xx.py
 ros2 launch bxi_example_py_trunk example_launch_xx_terrain.py
 ros2 launch bxi_example_py_trunk example_launch_xx_jump.py
 
+# hardware
 ros2 launch bxi_example_py_trunk example_launch_xx_terrain_hw.py
+ros2 launch bxi_example_py_trunk example_launch_xx_jump_hw.py
 
 export ROS_DOMAIN_ID=19
 sudo su
