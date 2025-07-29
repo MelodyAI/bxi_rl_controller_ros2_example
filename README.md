@@ -55,8 +55,14 @@ https://blog.csdn.net/weixin_55944949/article/details/140373710
 * 运行`ros2 launch bxi_example_py example_launch.py`启动 模拟器 + 控制程序（强化学习版）    
 * 运行`ros2 launch bxi_example_py example_launch_hw.py`启动 真机 + 控制程序 （强化学习版）
 ```bash
-source /opt/bxi/bxi_ros2_pkg/setup.bash
+# build local
 source /home/xuxin/allCode/bxi_ros2_example/bxi_ros2_pkg/setup.bash
+# build at robot
+source /opt/bxi/bxi_ros2_pkg/setup.bash
+
+./build.sh
+
+# run
 source install/setup.bash
 ros2 launch bxi_example_py example_launch.py
 ros2 launch bxi_example_py_trunk example_launch.py

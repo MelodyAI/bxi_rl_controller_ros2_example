@@ -21,7 +21,8 @@ from sensor_msgs.msg import JointState
 # from bxi_example_py_trunk.inference.humanoid_dh_long_onnx import humanoid_dh_long_onnx_Agent
 # from bxi_example_py_trunk.inference.humanoid_hurdle import humanoid_hurdle_onnx_Agent
 # from bxi_example_py_trunk.inference.humanoid_hurdle_history import humanoid_hurdle_onnx_Agent
-from bxi_example_py_trunk.inference.humanoid_hurdle_history_new import humanoid_hurdle_onnx_Agent
+# from bxi_example_py_trunk.inference.humanoid_hurdle_history_v2 import humanoid_hurdle_onnx_Agent
+from bxi_example_py_trunk.inference.humanoid_hurdle_history_v3 import humanoid_hurdle_onnx_Agent
 
 
 import onnxruntime as ort
@@ -80,8 +81,12 @@ joint_kp = np.array([     # 指定关节的kp，和joint_name顺序一一对应
     500,500,150,
     150,150,150,300,40,40,
     150,150,150,300,40,40,
-    2,2,1,2,1,
-    2,2,1,2,1,
+    # 2,2,1,2,1,
+    # 2,2,1,2,1,
+    # 150,150,150,150,150,
+    # 150,150,150,150,150,
+    50,50,50,50,50,
+    50,50,50,50,50,
 ], dtype=np.float32)
 # joint_kp [5:8] *= 1.5
 # joint_kp [11:14] *= 1.5
@@ -90,8 +95,10 @@ joint_kd = np.array([  # 指定关节的kd，和joint_name顺序一一对应
     5,5,2,
     2,2,2,4,2,2,
     2,2,2,4,2,2,
-    0.5,0.5,0.5,0.5,0.5,
-    0.5,0.5,0.5,0.5,0.5,
+    # 0.5,0.5,0.5,0.5,0.5,
+    # 0.5,0.5,0.5,0.5,0.5,
+    2,2,2,2,2,
+    2,2,2,2,2,
 ], dtype=np.float32)
 
 
@@ -298,7 +305,6 @@ class BxiExample(Node):
             yaw_delta = (self.target_yaw - self.base_yaw + np.pi) % (2*np.pi) - np.pi
             # print(x_vel_cmd)
             # print(self.target_yaw, self.base_yaw, yaw_delta)
-            difficulty = np.array([0.55])
             obs_group={
                 "dof_pos":dof_pos,
                 "dof_vel":dof_vel,
@@ -307,7 +313,6 @@ class BxiExample(Node):
                 "projected_gravity":p_g_vec,
                 "height_map":height_map,
                 "yaw_delta":np.array([yaw_delta,yaw_delta]),
-                "difficulty": difficulty,
             }
 
             target_q = self.agent.inference(obs_group)

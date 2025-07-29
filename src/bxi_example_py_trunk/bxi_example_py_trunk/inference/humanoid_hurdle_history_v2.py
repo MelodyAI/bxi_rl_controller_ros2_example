@@ -58,6 +58,11 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
         self.is_reset = True
         self.jump = False
         self.agent_count = 0
+        video_fps = 30
+        agent_dt = 0.02
+        video_buffer_length = 167
+        self.motion_time_increment = agent_dt * video_fps / video_buffer_length
+
         self.bootstrap()
 
 
@@ -68,8 +73,6 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
             "dof_vel":np.zeros(23),
             "angular_velocity":np.zeros(3),
             "projected_gravity":np.zeros(3),
-            "norm_time":np.zeros(1),
-            "difficulty":np.zeros(1), 
         }
         self.inference(obs_group)
 
@@ -79,15 +82,16 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
         obs_last_actions = self.last_actions_buf
         obs_projected_gravity = obs_group["projected_gravity"]
         obs_base_ang_vel = obs_group["angular_velocity"] * self.obs_scale["ang_vel"]
-        motion_time_norm = self.agent_count * 0.02 * 30 / 167
-        if motion_time_norm > 0.9:
+        motion_time_norm = self.agent_count * self.motion_time_increment
+        if motion_time_norm > 1.0:
             motion_time_norm = 0
             self.agent_count = 0
             self.jump =  False
         print(motion_time_norm)
+        motion_time_norm = np.array([motion_time_norm])
 
-        infer_dt = np.ones((1,))
-        difficulty = obs_group["difficulty"]
+        infer_dt = np.array([1.])
+        difficulty = np.array([0.55])
         # import ipdb; ipdb.set_trace()
 
         # 本体感知proprioception 9+69+162=240
@@ -97,8 +101,8 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
             obs_dof_pos, # 23
             obs_dof_vel, # 23
             obs_last_actions, # 23
-            np.array([motion_time_norm]), # 1
-            infer_dt.flatten(), # 1
+            motion_time_norm, # 1
+            infer_dt, # 1
             difficulty, # 1
         ),axis=-1)
 
@@ -148,8 +152,6 @@ if __name__=="__main__":
         "dof_vel":np.zeros(23),
         "angular_velocity":np.zeros(3),
         "projected_gravity":np.zeros(3),
-        "norm_time":np.zeros(1),
-        "difficulty":np.zeros(1), 
     }
     np.set_printoptions(formatter={'float': '{:.2f}'.format})
     for i in range(100):
