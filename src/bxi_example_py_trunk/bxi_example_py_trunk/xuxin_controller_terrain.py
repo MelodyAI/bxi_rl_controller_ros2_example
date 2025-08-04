@@ -329,7 +329,10 @@ class BxiExample(Node):
             self.dyaw *= ang_scale
             x_vel_cmd *= lin_scale
             if abs(self.dyaw) < 0.1: self.dyaw = 0 # 死区
-            self.target_yaw += self.dyaw * self.dt
+            if self.loop_count_step_2 == 1:
+                self.target_yaw = self.base_yaw # 把初始传感器角度设为target
+            else:
+                self.target_yaw += self.dyaw * self.dt
             yaw_delta = (self.target_yaw - self.base_yaw + np.pi) % (2*np.pi) - np.pi
             # print(x_vel_cmd)
             # print(self.target_yaw, self.base_yaw, yaw_delta)

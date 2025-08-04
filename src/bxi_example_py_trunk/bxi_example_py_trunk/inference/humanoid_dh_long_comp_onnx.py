@@ -11,8 +11,9 @@ class humanoid_dh_long_comp_onnx_Agent(baseAgent):
         self.include_history_steps = 5
         self.long_history = 64
         self.num_actions = 12
-        policy_path = "/home/xuxin/allCode/bxi_ros2_example/src/bxi_example_py_trunk/policy/Aug03_17-25-15_model_524000.onnx"
-        
+        # policy_path = "/home/xuxin/allCode/bxi_ros2_example/src/bxi_example_py_trunk/policy/Aug03_17-25-15_model_524000.onnx"
+        policy_path = "/home/bxi/bxi_ws_xx/src/bxi_example_py_trunk/policy/Aug03_17-25-15_model_524000.onnx"
+
         providers = [
             'CUDAExecutionProvider',  # 优先使用GPU
             'CPUExecutionProvider'    # 回退到CPU
@@ -71,7 +72,8 @@ class humanoid_dh_long_comp_onnx_Agent(baseAgent):
         self.gait_period = 0.6
         self.exp_filter = expFilter(0.6)
         
-        comp_policy_path = "/home/xuxin/allCode/bxi_ros2_example/src/bxi_example_py_trunk/policy/Aug03_17-25-15_model_524000_compensate.onnx"
+        # comp_policy_path = "/home/xuxin/allCode/bxi_ros2_example/src/bxi_example_py_trunk/policy/Aug03_17-25-15_model_524000_compensate.onnx"
+        comp_policy_path = "/home/bxi/bxi_ws_xx/src/bxi_example_py_trunk/policy/Aug03_17-25-15_model_524000_compensate.onnx"
         self.onnx_session_comp = ort.InferenceSession(
             comp_policy_path,
             providers=providers,
@@ -110,7 +112,16 @@ class humanoid_dh_long_comp_onnx_Agent(baseAgent):
         obs_projected_gravity = obs_group["projected_gravity"]
         obs_base_ang_vel = obs_group["angular_velocity"] * self.obs_scale["ang_vel"]
         obs_commands = obs_group["commands"]
-        obs_commands[...,2] *= self.obs_scale["ang_vel"]
+        # obs_commands[...,2] *= self.obs_scale["ang_vel"]
+        obs_commands[...,2] = obs_group["yaw_delta"] * self.obs_scale["ang_vel"] # 使用导航角计算转向
+
+        x_vel = obs_commands[0]
+        if x_vel < 0.4: # 特别小的指令改成站立
+            x_vel = 0.
+        if x_vel > 0.8: # clip
+            x_vel = 0.8
+        obs_commands[0] = x_vel
+        
         obs_phase = self.get_phase()
 
         # 本体感知proprioception 47
