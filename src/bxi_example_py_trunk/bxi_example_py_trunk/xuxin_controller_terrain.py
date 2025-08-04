@@ -22,7 +22,8 @@ from sensor_msgs.msg import JointState
 # from bxi_example_py_trunk.inference.humanoid_hurdle import humanoid_hurdle_onnx_Agent
 # from bxi_example_py_trunk.inference.humanoid_hurdle_history import humanoid_hurdle_onnx_Agent
 # from bxi_example_py_trunk.inference.humanoid_hurdle_history_v2 import humanoid_hurdle_onnx_Agent
-from bxi_example_py_trunk.inference.humanoid_hurdle_history_v3 import humanoid_hurdle_onnx_Agent
+# from bxi_example_py_trunk.inference.humanoid_hurdle_history_v3 import humanoid_hurdle_onnx_Agent
+from bxi_example_py_trunk.inference.humanoid_dh_long_comp_onnx import humanoid_dh_long_comp_onnx_Agent
 
 
 import onnxruntime as ort
@@ -77,52 +78,79 @@ joint_nominal_pos = np.array([   # 指定的固定关节角度
     0.1,0.0,0.0,-0.3,0.0],    # 右臂放在大腿旁边 (Y=0 肩平, X=0 前后居中, Z=0 不旋转, 肘关节微弯)
     dtype=np.float32)
 
+"jump"
+# joint_kp = np.array([     # 指定关节的kp，和joint_name顺序一一对应
+#     500,500,150,
+#     150,150,150,300,40,40,
+#     150,150,150,300,40,40,
+#     50,50,50,20,20,
+#     50,50,50,20,20,
+# ], dtype=np.float32)
+
+# joint_kd = np.array([  # 指定关节的kd，和joint_name顺序一一对应
+#     5,5,2,
+#     2,2,2,4,2,2,
+#     2,2,2,4,2,2,
+#     1.5,1.5,0.8,1.5,0.8,
+#     1.5,1.5,0.8,1.5,0.8,
+# ], dtype=np.float32)
+
+# isaac_joint_names = [ # isaacgym顺序
+#     # 0:5
+#     "l_shld_y_joint",   # 左臂_肩关节_y轴
+#     "l_shld_x_joint",   # 左臂_肩关节_x轴
+#     "l_shld_z_joint",   # 左臂_肩关节_z轴
+#     "l_elb_y_joint",   # 左臂_肘关节_y轴
+#     "l_elb_z_joint",   # 左臂_肘关节_y轴
+#     # 5:10
+#     "r_shld_y_joint",   # 右臂_肩关节_y轴   
+#     "r_shld_x_joint",   # 右臂_肩关节_x轴
+#     "r_shld_z_joint",   # 右臂_肩关节_z轴
+#     "r_elb_y_joint",    # 右臂_肘关节_y轴
+#     "r_elb_z_joint",    # 右臂_肘关节_y轴
+#     # 10:11
+#     "waist_z_joint",
+#     # 11:17
+#     "l_hip_z_joint",   # 左腿_髋关节_z轴
+#     "l_hip_x_joint",   # 左腿_髋关节_x轴
+#     "l_hip_y_joint",   # 左腿_髋关节_y轴
+#     "l_knee_y_joint",   # 左腿_膝关节_y轴
+#     "l_ankle_y_joint",   # 左腿_踝关节_y轴
+#     "l_ankle_x_joint",   # 左腿_踝关节_x轴
+#     # 17:23
+#     "r_hip_z_joint",   # 右腿_髋关节_z轴    
+#     "r_hip_x_joint",   # 右腿_髋关节_x轴
+#     "r_hip_y_joint",   # 右腿_髋关节_y轴
+#     "r_knee_y_joint",   # 右腿_膝关节_y轴
+#     "r_ankle_y_joint",   # 右腿_踝关节_y轴
+#     "r_ankle_x_joint",   # 右腿_踝关节_x轴
+# ]
+
+"walk"
 joint_kp = np.array([     # 指定关节的kp，和joint_name顺序一一对应
     500,500,150,
-    150,150,150,300,40,40,
-    150,150,150,300,40,40,
-    # 2,2,1,2,1,
-    # 2,2,1,2,1,
-    # 150,150,150,150,150,
-    # 150,150,150,150,150,
+    100,100,100,100,20,10,
+    100,100,100,100,20,10,
     50,50,50,20,20,
     50,50,50,20,20,
 ], dtype=np.float32)
-
 joint_kd = np.array([  # 指定关节的kd，和joint_name顺序一一对应
     5,5,2,
-    2,2,2,4,2,2,
-    2,2,2,4,2,2,
+    3,3,3,3,0.5,0.5,
+    3,3,3,3,0.5,0.5,
     1.5,1.5,0.8,1.5,0.8,
     1.5,1.5,0.8,1.5,0.8,
-    # 2,2,2,2,2,
-    # 2,2,2,2,2,
 ], dtype=np.float32)
 
-
 isaac_joint_names = [ # isaacgym顺序
-    # 0:5
-    "l_shld_y_joint",   # 左臂_肩关节_y轴
-    "l_shld_x_joint",   # 左臂_肩关节_x轴
-    "l_shld_z_joint",   # 左臂_肩关节_z轴
-    "l_elb_y_joint",   # 左臂_肘关节_y轴
-    "l_elb_z_joint",   # 左臂_肘关节_y轴
-    # 5:10
-    "r_shld_y_joint",   # 右臂_肩关节_y轴   
-    "r_shld_x_joint",   # 右臂_肩关节_x轴
-    "r_shld_z_joint",   # 右臂_肩关节_z轴
-    "r_elb_y_joint",    # 右臂_肘关节_y轴
-    "r_elb_z_joint",    # 右臂_肘关节_y轴
-    # 10:11
-    "waist_z_joint",
-    # 11:17
+    # 0:6
     "l_hip_z_joint",   # 左腿_髋关节_z轴
     "l_hip_x_joint",   # 左腿_髋关节_x轴
     "l_hip_y_joint",   # 左腿_髋关节_y轴
     "l_knee_y_joint",   # 左腿_膝关节_y轴
     "l_ankle_y_joint",   # 左腿_踝关节_y轴
     "l_ankle_x_joint",   # 左腿_踝关节_x轴
-    # 17:23
+    # 6:12
     "r_hip_z_joint",   # 右腿_髋关节_z轴    
     "r_hip_x_joint",   # 右腿_髋关节_x轴
     "r_hip_y_joint",   # 右腿_髋关节_y轴
@@ -189,7 +217,8 @@ class BxiExample(Node):
         self.omega = np.zeros(3,dtype=np.double)
         self.quat = np.zeros(4,dtype=np.double)
         
-        self.agent = humanoid_hurdle_onnx_Agent(self.policy_file_onnx)
+        # self.agent = humanoid_hurdle_onnx_Agent(self.policy_file_onnx)
+        self.agent = humanoid_dh_long_comp_onnx_Agent(self.policy_file_onnx)
         
         self.vx = 0.1
         self.vy = 0.
