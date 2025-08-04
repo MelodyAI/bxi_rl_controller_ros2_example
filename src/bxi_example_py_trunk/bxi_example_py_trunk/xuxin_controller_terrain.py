@@ -198,6 +198,7 @@ class BxiExample(Node):
 
         self.step = 0
         self.loop_count = 0
+        self.loop_count_step_2 = 0
         self.dt = 0.02  # loop @100Hz # TODO:
         self.timer = self.create_timer(self.dt, self.timer_callback, callback_group=self.timer_callback_group_1)
 
@@ -320,6 +321,14 @@ class BxiExample(Node):
             # qpos[4+3] += ankle_y_offset
             # qpos[10+3] += ankle_y_offset
             
+            # 缓启动 1秒内和初始位姿插值
+            blend = self.loop_count_step_2/(1.0/0.02)
+            if blend > 1.0:
+                blend = 1.0 
+            else:
+                print("blend:",blend)
+            qpos = joint_nominal_pos * (1. - blend) + qpos * blend
+
             msg = bxiMsg.ActuatorCmds()
             msg.header.frame_id = robot_name
             msg.header.stamp = self.get_clock().now().to_msg()
@@ -331,6 +340,7 @@ class BxiExample(Node):
             msg.kd = joint_kd.tolist()
             self.act_pub.publish(msg)
 
+            self.loop_count_step_2 += 1
         self.loop_count += 1
     
     def robot_rest(self, reset_step, release):
