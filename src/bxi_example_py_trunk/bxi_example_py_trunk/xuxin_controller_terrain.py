@@ -78,6 +78,14 @@ joint_nominal_pos = np.array([   # 指定的固定关节角度
     0.1,0.0,0.0,-0.3,0.0],    # 右臂放在大腿旁边 (Y=0 肩平, X=0 前后居中, Z=0 不旋转, 肘关节微弯)
     dtype=np.float32)
 
+torque_limit = np.array([
+    50,50,50,
+    20,40,100,120,50,20,
+    20,40,100,120,50,20,
+    27,27,7,27,7,
+    27,27,7,27,7,
+])
+
 "jump"
 # joint_kp = np.array([     # 指定关节的kp，和joint_name顺序一一对应
 #     500,500,150,
@@ -212,8 +220,8 @@ class BxiExample(Node):
 
         self.lock_in = Lock()
         self.lock_ou = self.lock_in #Lock()
-        self.qpos = np.zeros(self.num_actions,dtype=np.double)
-        self.qvel = np.zeros(self.num_actions,dtype=np.double)
+        self.qpos = np.zeros(25,dtype=np.double)
+        self.qvel = np.zeros(25,dtype=np.double)
         self.omega = np.zeros(3,dtype=np.double)
         self.quat = np.zeros(4,dtype=np.double)
         
@@ -313,8 +321,8 @@ class BxiExample(Node):
 
             self.obstacle_play_update()
                                            
-            dof_pos = q
-            dof_vel = dq
+            dof_pos = q[index_isaac_in_mujoco]
+            dof_vel = dq[index_isaac_in_mujoco]
             quat = self.quat
             g_vec = np.array([0.,0.,-1.])
             p_g_vec = quat_rotate_inverse(quat,g_vec)
@@ -360,6 +368,13 @@ class BxiExample(Node):
             else:
                 print("blend:",blend)
             qpos = joint_nominal_pos * (1. - blend) + qpos * blend
+
+            # 软限位
+            upper_limit = q + (torque_limit - dq * joint_kd) / joint_kp
+            lower_limit = q + (-torque_limit - dq * joint_kd) / joint_kp
+            qpos = qpos.clip(lower_limit, upper_limit)
+            # torque = (qpos - q) * joint_kp + dq * joint_kd
+            # print("torque",torque[index_isaac_in_mujoco])
 
             msg = bxiMsg.ActuatorCmds()
             msg.header.frame_id = robot_name
@@ -419,8 +434,8 @@ class BxiExample(Node):
         joint_tor = msg.effort
         
         with self.lock_in:
-            self.qpos = np.array(joint_pos)[index_isaac_in_mujoco]
-            self.qvel = np.array(joint_vel)[index_isaac_in_mujoco]
+            self.qpos = np.array(joint_pos)
+            self.qvel = np.array(joint_vel)
             # self.qpos[4] -= ankle_y_offset
             # self.qpos[10] -= ankle_y_offset
 

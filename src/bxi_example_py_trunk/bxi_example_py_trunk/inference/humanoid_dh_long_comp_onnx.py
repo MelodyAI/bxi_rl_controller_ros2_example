@@ -122,8 +122,8 @@ class humanoid_dh_long_comp_onnx_Agent(baseAgent):
         if x_vel > 0.8: # clip
             x_vel = 0.8
         obs_commands[0] = x_vel
-        print(obs_commands)
-        
+        # print(obs_commands)
+
         obs_phase = self.get_phase()
 
         # 本体感知proprioception 47
