@@ -22,6 +22,7 @@ def generate_launch_description():
     # policy_file_onnx_name = "policy、20250803_150053_elf2_dof23_noOdometry_0_adamimic_farjump.onnx"
     # policy_file_onnx_name = "policy/20250803_152657_elf2_dof23_noOdometry_1_adamimic_stage1_highjump.onnx"
     policy_file_onnx_name = "policy/0804_highjump.onnx"
+    # policy_file_onnx_name = "policy/0804_dance.onnx"
     
     policy_file_onnx = os.path.join(get_package_share_path("bxi_example_py_trunk"), policy_file_onnx_name)
 

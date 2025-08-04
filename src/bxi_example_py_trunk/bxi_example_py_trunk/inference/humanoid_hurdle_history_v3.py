@@ -69,7 +69,10 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
 
         # 跳高
         video_buffer_length = 108
-        self.motion_difficulty = 0.25
+        self.motion_difficulty = 0.15
+
+        # self.motion_difficulty = 0.55
+        # video_buffer_length = 588
 
         self.motion_time_increment = agent_dt * video_fps / video_buffer_length
 
