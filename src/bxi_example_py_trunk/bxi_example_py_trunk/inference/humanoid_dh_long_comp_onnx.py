@@ -92,6 +92,7 @@ class humanoid_dh_long_comp_onnx_Agent(baseAgent):
             "angular_velocity":np.zeros(3,dtype=float),
             "commands":np.zeros(3,dtype=float),
             "projected_gravity":np.array([0.,0.,-1.],dtype=float),
+            "yaw_delta":np.zeros(2,dtype=float),
         }
         self.inference(obs_group)
 
@@ -113,7 +114,7 @@ class humanoid_dh_long_comp_onnx_Agent(baseAgent):
         obs_base_ang_vel = obs_group["angular_velocity"] * self.obs_scale["ang_vel"]
         obs_commands = obs_group["commands"]
         # obs_commands[...,2] *= self.obs_scale["ang_vel"]
-        obs_commands[...,2] = obs_group["yaw_delta"] * self.obs_scale["ang_vel"] # 使用导航角计算转向
+        obs_commands[...,2] = obs_group["yaw_delta"][0] * self.obs_scale["ang_vel"] # 使用导航角计算转向
 
         x_vel = obs_commands[0]
         if x_vel < 0.4: # 特别小的指令改成站立
@@ -121,6 +122,7 @@ class humanoid_dh_long_comp_onnx_Agent(baseAgent):
         if x_vel > 0.8: # clip
             x_vel = 0.8
         obs_commands[0] = x_vel
+        print(obs_commands)
         
         obs_phase = self.get_phase()
 
@@ -218,6 +220,7 @@ class humanoid_dh_long_comp_onnx_Agent(baseAgent):
             "angular_velocity":np.zeros(3),
             "projected_gravity":np.array([0.,0.,-1.]),
             "commands":np.zeros(3),
+            "yaw_delta":np.zeros(2,dtype=float),
         }
         norminal_obs, estimator_obs =self.build_observations_v2(norminal_obs_group)
         self.prop_obs_history[:,:] = norminal_obs[:,None]
@@ -233,6 +236,7 @@ if __name__=="__main__":
         "angular_velocity":np.zeros(3),
         "projected_gravity":np.array([0.,0.,-1.]),
         "commands":np.zeros(3),
+        "yaw_delta":np.zeros(2,dtype=float),
     }
     np.set_printoptions(formatter={'float': '{:.2f}'.format})
     for i in range(100):

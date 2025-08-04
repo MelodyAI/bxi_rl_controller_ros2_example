@@ -325,9 +325,9 @@ class BxiExample(Node):
             self.base_yaw = np.arctan2(t3, t4)
 
             ang_scale = 2.
-            lin_scale = 2.
+            # lin_scale = 2.
             self.dyaw *= ang_scale
-            x_vel_cmd *= lin_scale
+            # x_vel_cmd *= lin_scale
             if abs(self.dyaw) < 0.1: self.dyaw = 0 # 死区
             if self.loop_count_step_2 == 1:
                 self.target_yaw = self.base_yaw # 把初始传感器角度设为target
