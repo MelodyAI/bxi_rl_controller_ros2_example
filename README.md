@@ -57,9 +57,9 @@ https://blog.csdn.net/weixin_55944949/article/details/140373710
 ```bash
 # build local
 source /home/xuxin/allCode/bxi_ros2_example/bxi_ros2_pkg/setup.bash
+./build.sh
 # build at robot
 source /opt/bxi/bxi_ros2_pkg/setup.bash
-
 ./build.sh
 
 # run

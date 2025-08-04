@@ -60,12 +60,20 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
         self.agent_count = 0
         video_fps = 30
         agent_dt = 0.02
-        video_buffer_length = 165 # 双脚跳
+
+        # 跳远
+        # video_buffer_length = 165 # 双脚跳
+        # self.motion_difficulty = 0.55
+
         # video_buffer_length = 142 # 单脚跳
+
+        # 跳高
+        video_buffer_length = 108
+        self.motion_difficulty = 0.25
+
         self.motion_time_increment = agent_dt * video_fps / video_buffer_length
 
         self.bootstrap()
-
 
     def bootstrap(self):
         "预热用"
@@ -78,6 +86,9 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
         self.inference(obs_group)
 
     def build_observations(self, obs_group):
+        for obs in obs_group.values():
+            obs = obs.clip(-self.clip_observation, self.clip_observation)
+
         obs_dof_pos = obs_group["dof_pos"] * self.obs_scale["dof_pos"]
         obs_dof_vel = obs_group["dof_vel"] * self.obs_scale["dof_vel"]
         obs_last_actions = self.last_actions_buf
@@ -92,7 +103,7 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
         motion_time_norm = np.array([motion_time_norm])
 
         infer_dt = np.array([0.])
-        difficulty = np.array([0.55])
+        difficulty = np.array([self.motion_difficulty])
         # import ipdb; ipdb.set_trace()
 
         # 本体感知proprioception 9+69+162=240
@@ -108,7 +119,7 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
         ),axis=-1)
 
         if self.is_reset:
-            self.prop_obs_history[:] = prop_obs  # 填充所有行
+            # self.prop_obs_history[:] = prop_obs  # 填充所有行
             self.is_reset = False  # 重置标志
 
         self.prop_obs_history=np.roll(self.prop_obs_history,shift=-1,axis=0)
@@ -117,9 +128,6 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
         return self.prop_obs_history
     
     def inference(self, obs_group):
-        for obs in obs_group.values():
-            obs = obs.clip(-self.clip_observation, self.clip_observation)
-
         # import ipdb; ipdb.set_trace()
         history_obs = self.build_observations(obs_group).copy()
 
