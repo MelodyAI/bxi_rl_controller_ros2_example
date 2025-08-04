@@ -58,6 +58,7 @@ https://blog.csdn.net/weixin_55944949/article/details/140373710
 # build local
 source /home/xuxin/allCode/bxi_ros2_example/bxi_ros2_pkg/setup.bash
 ./build.sh
+
 # build at robot
 source /opt/bxi/bxi_ros2_pkg/setup.bash
 ./build.sh
@@ -74,11 +75,11 @@ ros2 launch bxi_example_py_trunk example_launch_xx_jump.py
 ros2 launch bxi_example_py_trunk example_launch_xx_terrain_hw.py
 ros2 launch bxi_example_py_trunk example_launch_xx_jump_hw.py
 
-export ROS_DOMAIN_ID=19
 sudo su
 source /opt/bxi/bxi_ros2_pkg/setup.bash
 source install/setup.bash
-ros2 launch remote_controller remote_conroller_launch.py # 
+export ROS_DOMAIN_ID=19
+ros2 launch remote_controller remote_conroller_launch.py
 ```
 
 ### 硬件保护
