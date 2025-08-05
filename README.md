@@ -16,6 +16,11 @@
 
 ## 使用说明
 
+### 版本说明
+1. `elf2-trunk`:精灵2原版，以躯干作为`base link`，七月之前发货均为此版本
+2. `elf2-ankle`:脚踝强化版，脚踝扭矩增大到`50Nm`，七月十五号之前发货为此版本
+3. `elf2-foot`:脚掌形状改为非对称，拟人脚掌，七月十五号后均为此版本
+
 ### 系统环境以及依赖
 真机已配置好环境，到手即可使用，重新安装系统后或者在其他机器运行仿真需重新配置环境。具体如下：
 1. 系统版本需为`Ubuntu 22.04`，并安装对应版本`ROS2`
@@ -28,6 +33,7 @@ https://blog.csdn.net/weixin_55944949/article/details/140373710
 `pip install torch`
 `pip install onnxruntime`
 6. 将`./script/bxi-dev.rules`复制到`/etc/udev/rules.d/`
+7. 设置遥控器自启动，按需修改`./script/ros_elf_launch.service`,复制到`/etc/systemd/system/`,使用`systemctl`工具使能自启动服务
 
 ### 仿真与真机差异
 
