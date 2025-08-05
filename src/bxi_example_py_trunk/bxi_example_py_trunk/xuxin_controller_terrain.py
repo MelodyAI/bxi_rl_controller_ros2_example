@@ -158,7 +158,7 @@ class BxiExample(Node):
         self.walk_agent = humanoid_walk_onnx_Agent(self.policy_file_dict["walk_example"])
         self.jump_agent = humanoid_hurdle_onnx_Agent(self.policy_file_dict["high_jump"])
         
-        self.vx = 0.1
+        self.vx = 0.
         self.vy = 0.
         self.dyaw = 0.
         self.height_map = 1.05 - np.zeros(18*9,dtype=np.double) # base_pos_z - height
@@ -218,7 +218,7 @@ class BxiExample(Node):
                 # 进入跳跃准备状态
                 self.state = robotState.stand_to_jump
                 self.stand_to_jump_counter = Counter(2.0/self.loop_dt)
-                print("stand_to_jump")
+                print("state: stand_to_jump")
             
         elif self.state==robotState.stand_to_jump:
             self.stand_to_jump_counter.step()
@@ -228,20 +228,20 @@ class BxiExample(Node):
 
                 self.jump_agent.reset()
                 self.jump_agent.jump = True
-                print("jump")
+                print("state: jump")
 
         elif self.state==robotState.jump:
             if not self.jump_agent.jump:
                 self.state=robotState.jump_to_stand
                 self.jump_to_stand_counter = Counter(2.0/self.loop_dt)
-                print("jump_to_stand")
+                print("state: jump_to_stand")
  
         elif(self.state==robotState.jump_to_stand):
             self.jump_to_stand_counter.step()
             if self.jump_to_stand_counter.finished:
                 self.state=robotState.stand
                 self.jump_to_stand_counter = None
-                print("stand")
+                print("state: stand")
   
         else:
             #其他状态机情况
@@ -291,7 +291,7 @@ class BxiExample(Node):
                 yaw_vel_cmd = self.dyaw
                 height_map = self.height_map
 
-            self.obstacle_play_update()
+            # self.obstacle_play_update()
             self.state_machine()
 
             gravity_vec = np.array([0.,0.,-1.])
@@ -313,9 +313,7 @@ class BxiExample(Node):
             dof_pos_target = None
             joint_kp_send = joint_kp.copy()
             joint_kd_send = joint_kd.copy()
-            obs_group_23={
-                "dof_pos":dof_pos[index_isaac_in_mujoco_23],
-                "dof_vel":dof_vel[index_isaac_in_mujoco_23],
+            obs_group={
                 "angular_velocity":base_ang_vel,
                 "commands":np.array([x_vel_cmd, y_vel_cmd, yaw_vel_cmd]),
                 "projected_gravity":projected_gravity_vec,
@@ -323,27 +321,27 @@ class BxiExample(Node):
                 "height_map":height_map,
                 "yaw_delta":np.array([yaw_delta,yaw_delta]),
             }
-            obs_group_12={
-                "dof_pos":dof_pos[index_isaac_in_mujoco_12],
-                "dof_vel":dof_vel[index_isaac_in_mujoco_12],
-                "angular_velocity":base_ang_vel,
-                "commands":np.array([x_vel_cmd, y_vel_cmd, yaw_vel_cmd]),
-                "projected_gravity":projected_gravity_vec,
-                "euler_angle":rpy_angle,
-                "height_map":height_map,
-                "yaw_delta":np.array([yaw_delta,yaw_delta]),
-            }
+            if ((self.state == robotState.stand)or
+                (self.state == robotState.stand_to_jump)or
+                (self.state == robotState.jump_to_stand)):
+                obs_group["dof_pos"] = dof_pos[index_isaac_in_mujoco_12_example]
+                obs_group["dof_vel"] = dof_vel[index_isaac_in_mujoco_12_example]
+            elif self.state == robotState.jump:
+                obs_group["dof_pos"] = dof_pos[index_isaac_in_mujoco_23]
+                obs_group["dof_vel"] = dof_vel[index_isaac_in_mujoco_23]
+            else:
+                raise Exception
 
             if self.state == robotState.stand:
                 # obs_group_12["dof_pos"][4] -= ankle_y_offset
                 # obs_group_12["dof_pos"][10] -= ankle_y_offset
-                agent_out = self.walk_agent.inference(obs_group_12)
+                agent_out = self.walk_agent.inference(obs_group)
                 # agent_out[4] += ankle_y_offset
                 # agent_out[10] += ankle_y_offset
                 dof_pos_target = joint_nominal_pos.copy()
-                dof_pos_target[index_isaac_in_mujoco_12] = agent_out
-                joint_kp_send[index_isaac_in_mujoco_12] = joint_info_12_example.joint_kp
-                joint_kd_send[index_isaac_in_mujoco_12] = joint_info_12_example.joint_kd
+                dof_pos_target[index_isaac_in_mujoco_12_example] = agent_out
+                joint_kp_send[index_isaac_in_mujoco_12_example] = joint_info_12_example.joint_kp
+                joint_kd_send[index_isaac_in_mujoco_12_example] = joint_info_12_example.joint_kd
 
             elif self.state == robotState.stand_to_jump:
                 # 进入跳跃状态后 先把手臂抬起来到启动位置
@@ -358,17 +356,16 @@ class BxiExample(Node):
                 dof_pos_target[index_isaac_in_mujoco_23_upper_body] = dof_pos_target_upper_body
 
                 # 下半身仍然用走路的控制
-                agent_out = self.walk_agent.inference(obs_group_12)
-                dof_pos_target[index_isaac_in_mujoco_12] = agent_out
+                agent_out = self.walk_agent.inference(obs_group)
+                dof_pos_target[index_isaac_in_mujoco_12_example] = agent_out
 
-                joint_kp_send[index_isaac_in_mujoco_12] = joint_info_12_example.joint_kp
-                joint_kd_send[index_isaac_in_mujoco_12] = joint_info_12_example.joint_kd
+                joint_kp_send[index_isaac_in_mujoco_12_example] = joint_info_12_example.joint_kp
+                joint_kd_send[index_isaac_in_mujoco_12_example] = joint_info_12_example.joint_kd
 
             elif self.state == robotState.jump:
                 if (self.loop_count % 2 == 0): # jump agent是50hz
                     # print("jump inference")
-
-                    agent_out = self.jump_agent.inference(obs_group_23)
+                    agent_out = self.jump_agent.inference(obs_group)
                     dof_pos_target = joint_nominal_pos.copy()
                     dof_pos_target[index_isaac_in_mujoco_23] = agent_out
                     joint_kp_send[index_isaac_in_mujoco_23] = joint_info_23.joint_kp
@@ -376,10 +373,13 @@ class BxiExample(Node):
                 else:
                     # 50hz空白的一帧发送上一帧相同指令
                     # print("jump inference skip")
-                    pass
+                    dof_pos_target = self.dof_pos_target_last
+                    joint_kp_send = self.joint_kp_send_last
+                    joint_kd_send = self.joint_kd_send_last
+
             elif self.state == robotState.jump_to_stand:
                 dof_pos_target = joint_nominal_pos.copy()
-                blend = min(self.jump_to_stand_counter.percent * 1.5, 1.0)
+                blend = max(self.jump_to_stand_counter.percent * 1.5 - 0.5, 0.)
                 print("jump_to_stand:",blend)
 
                 # 上半身插值
@@ -389,18 +389,13 @@ class BxiExample(Node):
                 dof_pos_target[index_isaac_in_mujoco_23_upper_body] = dof_pos_target_upper_body
 
                 # 下半身仍然用走路的控制
-                agent_out = self.walk_agent.inference(obs_group_12)
-                dof_pos_target[index_isaac_in_mujoco_12] = agent_out
+                agent_out = self.walk_agent.inference(obs_group)
+                dof_pos_target[index_isaac_in_mujoco_12_example] = agent_out
 
-                joint_kp_send[index_isaac_in_mujoco_12] = joint_info_12_example.joint_kp
-                joint_kd_send[index_isaac_in_mujoco_12] = joint_info_12_example.joint_kd
+                joint_kp_send[index_isaac_in_mujoco_12_example] = joint_info_12_example.joint_kp
+                joint_kd_send[index_isaac_in_mujoco_12_example] = joint_info_12_example.joint_kd
             else:
                 raise Exception
-
-            if dof_pos_target is None:
-                dof_pos_target = self.dof_pos_target_last
-                joint_kp_send = self.joint_kp_send_last
-                joint_kd_send = self.joint_kd_send_last
 
             # 软限位
             # upper_limit = dof_pos + (torque_limit - dof_vel * joint_kd) / joint_kp

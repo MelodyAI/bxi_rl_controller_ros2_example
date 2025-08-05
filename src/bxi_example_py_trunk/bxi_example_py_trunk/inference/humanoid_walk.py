@@ -46,6 +46,7 @@ class humanoid_walk_onnx_Agent(baseAgent):
 
         self.last_actions_buf = np.zeros(self.num_actions)
         self.inference_count = 0
+        self.phase_count = 0
         self.dt = 0.01
         self.gait_period = 0.7
         self.exp_filter = expFilter(0.6)
@@ -59,25 +60,10 @@ class humanoid_walk_onnx_Agent(baseAgent):
         }
         actions = np.squeeze(self.onnx_session.run(["output"], input_feed))
 
-    def  _get_sin(self, phase):
-        phase %= 1.
-        f = 0
-        phase_1 = 0.5
-        
-        width_1 = phase_1
-        width_2 = 1 - phase_1
-        width_sin_1 = (2*math.pi)/2.
-        
-        if phase < phase_1:
-            f = math.sin(width_sin_1 * (phase / width_1))
-        else: 
-            f = -math.sin(width_sin_1 * ((phase - phase_1) / width_2))
-        return f
-
     def get_phase(self):
         phase = self.inference_count * self.dt / self.gait_period
-        obs = np.array([self._get_sin(phase),
-                        self._get_sin(phase+0.5)])
+        obs = np.array([np.sin(2. * np.pi * phase),
+                        np.cos(2. * np.pi * phase)])
         return obs
 
     def build_observations(self, obs_group):
@@ -90,14 +76,18 @@ class humanoid_walk_onnx_Agent(baseAgent):
         obs_euler_angle = obs_group["euler_angle"]
         obs_base_ang_vel = obs_group["angular_velocity"] * self.obs_scale["ang_vel"]
         obs_commands = obs_group["commands"].copy()
+        stand = (np.linalg.norm(obs_commands)<0.05)
         obs_commands[...,:2] *= self.obs_scale["lin_vel_cmd"]
         obs_commands[...,2] *= self.obs_scale["ang_vel_cmd"]
         obs_phase = self.get_phase()
+        if stand:
+            obs_phase[:] = 0
+            self.phase_count = 0
 
         # 本体感知proprioception 47
         prop_obs = np.concatenate((
-            obs_phase, # 3
-            obs_commands, # 2
+            obs_phase, # 2
+            obs_commands, # 3
             obs_dof_pos, # 12
             obs_dof_vel, # 12
             obs_last_actions, # 12
@@ -147,12 +137,13 @@ class humanoid_walk_onnx_Agent(baseAgent):
         actions = np.squeeze(self.onnx_session.run(["output"], input_feed))
         actions = np.clip(actions, -self.clip_action, self.clip_action)
 
-        self.last_actions_buf = actions
+        self.last_actions_buf[:] = actions
 
         dof_pos_target_urdf = actions * self.action_scale + self.default_dof_pos
 
         # dof_pos_target_urdf = self.exp_filter.filter(dof_pos_target_urdf)
         self.inference_count += 1
+        self.phase_count += 1
         return dof_pos_target_urdf
     
     def reset(self):
@@ -170,6 +161,7 @@ class humanoid_walk_onnx_Agent(baseAgent):
         # self.prop_obs_history[:,:] = norminal_obs[:,None]
         self.exp_filter.reset()
         self.inference_count = 0
+        self.phase_count = 0
 
 if __name__=="__main__":
     a=humanoid_walk_onnx_Agent("/home/xuxin/allCode/bxi_ros2_example/src/bxi_example_py/policy/model.onnx")

@@ -72,7 +72,9 @@ source /opt/bxi/bxi_ros2_pkg/setup.bash
 # run
 source install/setup.bash
 ros2 launch bxi_example_py example_launch.py
+ros2 launch bxi_example_py_ankle example_launch.py
 ros2 launch bxi_example_py_trunk example_launch.py
+
 ros2 launch bxi_example_py_trunk example_launch_xx.py
 ros2 launch bxi_example_py_trunk example_launch_xx_terrain.py
 ros2 launch bxi_example_py_trunk example_launch_xx_jump.py
