@@ -3,7 +3,7 @@ import os.path as osp
 import numpy as np
 from typing import Dict
 from bxi_example_py_trunk.inference.base_agent import baseAgent
-from bxi_example_py_trunk.inference.exp_filter import expFilter
+from bxi_example_py_trunk.utils.exp_filter import expFilter
 import onnxruntime as ort
 
 class humanoid_hurdle_onnx_Agent(baseAgent):

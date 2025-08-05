@@ -3,7 +3,7 @@ import os.path as osp
 import numpy as np
 from typing import Dict
 from bxi_example_py_trunk.inference.base_agent import baseAgent
-from bxi_example_py_trunk.inference.exp_filter import expFilter
+from bxi_example_py_trunk.utils.exp_filter import expFilter
 import onnxruntime as ort
 
 
@@ -63,14 +63,14 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
 
         # 跳远
         # video_buffer_length = 165 # 双脚跳
-        # self.motion_difficulty = 0.55
-
-        # video_buffer_length = 142 # 单脚跳
+        # self.motion_difficulty = 0.65
 
         # 跳高
         video_buffer_length = 108
+        # self.motion_difficulty = 0.3
         self.motion_difficulty = 0.15
 
+        # 跳舞
         # self.motion_difficulty = 0.55
         # video_buffer_length = 588
 
@@ -99,10 +99,9 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
         obs_base_ang_vel = obs_group["angular_velocity"] * self.obs_scale["ang_vel"]
         motion_time_norm = self.agent_count * self.motion_time_increment
         if motion_time_norm > 1.0:
-            motion_time_norm = 0
-            self.agent_count = 0
+            motion_time_norm = 1.0
             self.jump =  False
-        print(motion_time_norm)
+        print(f"motion percent:{motion_time_norm:.2f}")
         motion_time_norm = np.array([motion_time_norm])
 
         infer_dt = np.array([0.])

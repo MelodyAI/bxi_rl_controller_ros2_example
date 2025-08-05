@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from bxi_example_py_trunk.inference.base_agent import baseAgent
-from bxi_example_py_trunk.inference.exp_filter import expFilter
+from bxi_example_py_trunk.utils.exp_filter import expFilter
 import time
 from copy import deepcopy
 

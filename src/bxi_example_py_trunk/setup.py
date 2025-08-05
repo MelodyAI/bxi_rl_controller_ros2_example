@@ -22,7 +22,11 @@ def get_data_files():
 setup(
     name=package_name,
     version='0.0.0',
-    packages=[package_name, f'{package_name}.inference'],
+    packages=[package_name,
+              f'{package_name}.inference',
+              f'{package_name}.joint_info',
+              f'{package_name}.utils',
+              ],
     data_files=[
         ('share/ament_index/resource_index/packages',['resource/' + package_name]),
         # ('share/' + package_name + '/policy', ['policy/policy.jit']),

@@ -14,6 +14,7 @@ import numpy as np
 import time
 import sys
 import math
+import json
 from std_msgs.msg import Header,Float32MultiArray
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import JointState
@@ -22,14 +23,17 @@ from sensor_msgs.msg import JointState
 # from bxi_example_py_trunk.inference.humanoid_hurdle import humanoid_hurdle_onnx_Agent
 # from bxi_example_py_trunk.inference.humanoid_hurdle_history import humanoid_hurdle_onnx_Agent
 # from bxi_example_py_trunk.inference.humanoid_hurdle_history_v2 import humanoid_hurdle_onnx_Agent
-# from bxi_example_py_trunk.inference.humanoid_hurdle_history_v3 import humanoid_hurdle_onnx_Agent
+from bxi_example_py_trunk.inference.humanoid_hurdle_history_v3 import humanoid_hurdle_onnx_Agent
 from bxi_example_py_trunk.inference.humanoid_dh_long_comp_onnx import humanoid_dh_long_comp_onnx_Agent
+from bxi_example_py_trunk.inference.humanoid_walk import humanoid_walk_onnx_Agent
 
+from bxi_example_py_trunk.utils.legged_math import quat_rotate_inverse,quaternion_to_euler_array
+from bxi_example_py_trunk.utils.counter import Counter
 
-import onnxruntime as ort
-
-import termios
-import select
+import bxi_example_py_trunk.joint_info.trunk_12dof as joint_info_12
+import bxi_example_py_trunk.joint_info.trunk_12dof_example as joint_info_12_example
+import bxi_example_py_trunk.joint_info.trunk_23dof as joint_info_23
+import bxi_example_py_trunk.joint_info.trunk_25dof as joint_info_25
 
 robot_name = "elf25"
 
@@ -78,107 +82,38 @@ joint_nominal_pos = np.array([   # 指定的固定关节角度
     0.1,0.0,0.0,-0.3,0.0],    # 右臂放在大腿旁边 (Y=0 肩平, X=0 前后居中, Z=0 不旋转, 肘关节微弯)
     dtype=np.float32)
 
+joint_kp = np.array([     # 指定关节的kp，和joint_name顺序一一对应
+    500,500,300,
+    100,100,100,150,30,10,
+    100,100,100,150,30,10,
+    20,20,10,20,10,
+    20,20,10,20,10], dtype=np.float32)
+
+joint_kd = np.array([  # 指定关节的kd，和joint_name顺序一一对应
+    5,5,3,
+    2,2,2,2.5,1,1,
+    2,2,2,2.5,1,1,
+    1,1,0.8,1,0.8,
+    1,1,0.8,1,0.8], dtype=np.float32)
+
 torque_limit = np.array([
+    20,40,100,120,50,20,
+    20,40,100,120,50,20,
     50,50,50,
-    20,40,100,120,50,20,
-    20,40,100,120,50,20,
     27,27,7,27,7,
     27,27,7,27,7,
 ])
 
-"jump"
-# joint_kp = np.array([     # 指定关节的kp，和joint_name顺序一一对应
-#     500,500,150,
-#     150,150,150,300,40,40,
-#     150,150,150,300,40,40,
-#     50,50,50,20,20,
-#     50,50,50,20,20,
-# ], dtype=np.float32)
+index_isaac_in_mujoco_12 = [joint_name.index(name) for name in joint_info_12.joint_names]
+index_isaac_in_mujoco_12_example = [joint_name.index(name) for name in joint_info_12_example.joint_names]
+index_isaac_in_mujoco_23 = [joint_name.index(name) for name in joint_info_23.joint_names]
+index_isaac_in_mujoco_23_upper_body = [joint_name.index(name) for name in joint_info_23.joint_names_upper_body]
 
-# joint_kd = np.array([  # 指定关节的kd，和joint_name顺序一一对应
-#     5,5,2,
-#     2,2,2,4,2,2,
-#     2,2,2,4,2,2,
-#     1.5,1.5,0.8,1.5,0.8,
-#     1.5,1.5,0.8,1.5,0.8,
-# ], dtype=np.float32)
-
-# isaac_joint_names = [ # isaacgym顺序
-#     # 0:5
-#     "l_shld_y_joint",   # 左臂_肩关节_y轴
-#     "l_shld_x_joint",   # 左臂_肩关节_x轴
-#     "l_shld_z_joint",   # 左臂_肩关节_z轴
-#     "l_elb_y_joint",   # 左臂_肘关节_y轴
-#     "l_elb_z_joint",   # 左臂_肘关节_y轴
-#     # 5:10
-#     "r_shld_y_joint",   # 右臂_肩关节_y轴   
-#     "r_shld_x_joint",   # 右臂_肩关节_x轴
-#     "r_shld_z_joint",   # 右臂_肩关节_z轴
-#     "r_elb_y_joint",    # 右臂_肘关节_y轴
-#     "r_elb_z_joint",    # 右臂_肘关节_y轴
-#     # 10:11
-#     "waist_z_joint",
-#     # 11:17
-#     "l_hip_z_joint",   # 左腿_髋关节_z轴
-#     "l_hip_x_joint",   # 左腿_髋关节_x轴
-#     "l_hip_y_joint",   # 左腿_髋关节_y轴
-#     "l_knee_y_joint",   # 左腿_膝关节_y轴
-#     "l_ankle_y_joint",   # 左腿_踝关节_y轴
-#     "l_ankle_x_joint",   # 左腿_踝关节_x轴
-#     # 17:23
-#     "r_hip_z_joint",   # 右腿_髋关节_z轴    
-#     "r_hip_x_joint",   # 右腿_髋关节_x轴
-#     "r_hip_y_joint",   # 右腿_髋关节_y轴
-#     "r_knee_y_joint",   # 右腿_膝关节_y轴
-#     "r_ankle_y_joint",   # 右腿_踝关节_y轴
-#     "r_ankle_x_joint",   # 右腿_踝关节_x轴
-# ]
-
-"walk"
-joint_kp = np.array([     # 指定关节的kp，和joint_name顺序一一对应
-    500,500,150,
-    100,100,100,100,20,10,
-    100,100,100,100,20,10,
-    50,50,50,20,20,
-    50,50,50,20,20,
-], dtype=np.float32)
-joint_kd = np.array([  # 指定关节的kd，和joint_name顺序一一对应
-    5,5,2,
-    3,3,3,3,0.5,0.5,
-    3,3,3,3,0.5,0.5,
-    1.5,1.5,0.8,1.5,0.8,
-    1.5,1.5,0.8,1.5,0.8,
-], dtype=np.float32)
-
-isaac_joint_names = [ # isaacgym顺序
-    # 0:6
-    "l_hip_z_joint",   # 左腿_髋关节_z轴
-    "l_hip_x_joint",   # 左腿_髋关节_x轴
-    "l_hip_y_joint",   # 左腿_髋关节_y轴
-    "l_knee_y_joint",   # 左腿_膝关节_y轴
-    "l_ankle_y_joint",   # 左腿_踝关节_y轴
-    "l_ankle_x_joint",   # 左腿_踝关节_x轴
-    # 6:12
-    "r_hip_z_joint",   # 右腿_髋关节_z轴    
-    "r_hip_x_joint",   # 右腿_髋关节_x轴
-    "r_hip_y_joint",   # 右腿_髋关节_y轴
-    "r_knee_y_joint",   # 右腿_膝关节_y轴
-    "r_ankle_y_joint",   # 右腿_踝关节_y轴
-    "r_ankle_x_joint",   # 右腿_踝关节_x轴
-]
-index_isaac_in_mujoco = [joint_name.index(name) for name in isaac_joint_names]
-
-
-def quat_rotate_inverse(q, v):
-    "x,y,z,w"
-    q_w = q[-1]
-    q_vec = q[:3]
-    
-    a = v * (2.0 * q_w ** 2 - 1.0)
-    b = np.cross(q_vec, v) * q_w * 2.0
-    c = q_vec * np.dot(q_vec, v) * 2.0
-    
-    return a - b + c
+class robotState:
+    stand = 1
+    stand_to_jump = 2
+    jump = 3
+    jump_to_stand = 4
 
 class BxiExample(Node):
 
@@ -190,17 +125,12 @@ class BxiExample(Node):
         self.topic_prefix = self.get_parameter('/topic_prefix').get_parameter_value().string_value
         print('topic_prefix:', self.topic_prefix)
 
-        # 策略文件在policy目录下
-        self.declare_parameter('/policy_file', 'default_value')
-        self.policy_file = self.get_parameter('/policy_file').get_parameter_value().string_value
-        print('policy_file:', self.policy_file)
-
-        self.declare_parameter('/policy_file_onnx', 'default_value')
-        self.policy_file_onnx = self.get_parameter('/policy_file_onnx').get_parameter_value().string_value
-        print('policy_file_onnx:', self.policy_file_onnx)
-
-        # print(index_isaac_in_mujoco)
-        self.num_actions = len(index_isaac_in_mujoco)
+        self.declare_parameter('/policy_file_dict', json.dumps({}))
+        policy_file_json = self.get_parameter('/policy_file_dict').value
+        self.policy_file_dict = json.loads(policy_file_json)
+        print('policy_file:')
+        for key,value in self.policy_file_dict.items():
+            print(key,": ",value)
 
         qos = QoSProfile(depth=1, durability=qos_profile_sensor_data.durability, reliability=qos_profile_sensor_data.reliability)
         
@@ -225,8 +155,8 @@ class BxiExample(Node):
         self.omega = np.zeros(3,dtype=np.double)
         self.quat = np.zeros(4,dtype=np.double)
         
-        # self.agent = humanoid_hurdle_onnx_Agent(self.policy_file_onnx)
-        self.agent = humanoid_dh_long_comp_onnx_Agent(self.policy_file_onnx)
+        self.walk_agent = humanoid_walk_onnx_Agent(self.policy_file_dict["walk_example"])
+        self.jump_agent = humanoid_hurdle_onnx_Agent(self.policy_file_dict["high_jump"])
         
         self.vx = 0.1
         self.vy = 0.
@@ -236,17 +166,24 @@ class BxiExample(Node):
         self.step = 0
         self.loop_count = 0
         self.loop_count_step_2 = 0
-        self.dt = 0.02  # loop @100Hz # TODO:
-        self.timer = self.create_timer(self.dt, self.timer_callback, callback_group=self.timer_callback_group_1)
+        self.loop_dt = 0.01  # loop @100Hz # TODO:
+        self.timer = self.create_timer(self.loop_dt, self.timer_callback, callback_group=self.timer_callback_group_1)
 
         # obstacle play
         total_play_time = 0.9 # 0.9m高程图长度 1m/s速度
-        self.total_play_count = total_play_time/self.dt
+        self.total_play_count = total_play_time/self.loop_dt
         self.obstacle_height = 0.3
         self.play_count = self.total_play_count + 999
         self.prev_jump_btn = False
     
         self.target_yaw = 0
+
+        self.jump = False
+        self.jump_count = 0
+        self.stand_to_jump_counter = None
+        self.jump_to_stand_counter = None
+        self.state = robotState.stand
+        self.jump_btn_changed = False
 
     def obstacle_play_command_callback(self):
         print("start play obstacle")
@@ -274,15 +211,50 @@ class BxiExample(Node):
             blank_map = np.zeros((18,9),dtype=np.double)
             self.height_map = (1.05 - blank_map).flatten()
 
+    def state_machine(self):
+        "状态机"
+        if self.state==robotState.stand:
+            if self.jump_btn_changed:
+                # 进入跳跃准备状态
+                self.state = robotState.stand_to_jump
+                self.stand_to_jump_counter = Counter(2.0/self.loop_dt)
+                print("stand_to_jump")
+            
+        elif self.state==robotState.stand_to_jump:
+            self.stand_to_jump_counter.step()
+            if self.stand_to_jump_counter.finished:
+                self.state=robotState.jump
+                self.stand_to_jump_counter = None
+
+                self.jump_agent.reset()
+                self.jump_agent.jump = True
+                print("jump")
+
+        elif self.state==robotState.jump:
+            if not self.jump_agent.jump:
+                self.state=robotState.jump_to_stand
+                self.jump_to_stand_counter = Counter(2.0/self.loop_dt)
+                print("jump_to_stand")
+ 
+        elif(self.state==robotState.jump_to_stand):
+            self.jump_to_stand_counter.step()
+            if self.jump_to_stand_counter.finished:
+                self.state=robotState.stand
+                self.jump_to_stand_counter = None
+                print("stand")
+  
+        else:
+            #其他状态机情况
+            raise Exception
+
     def timer_callback(self):
-        
         # ptyhon 与 rclpy 多线程不太友好，这里使用定时间+简易状态机运行a
         if self.step == 0:
             self.robot_rest(1, False) # first reset
             print('robot reset 1!')
             self.step = 1
             return
-        elif self.step == 1 and self.loop_count >= (20./self.dt): # 延迟10s
+        elif self.step == 1 and self.loop_count >= (20./self.loop_dt): # 延迟10s
             self.robot_rest(2, True) # first reset
             print('robot reset 2!')
             self.loop_count = 0
@@ -290,7 +262,7 @@ class BxiExample(Node):
             return
         
         if self.step == 1:
-            soft_start = self.loop_count/(2./self.dt) # 1秒关节缓启动
+            soft_start = self.loop_count/(2./self.loop_dt) # 1秒关节缓启动
             if soft_start > 1:
                 soft_start = 1
                 
@@ -309,10 +281,10 @@ class BxiExample(Node):
             self.act_pub.publish(msg)
         elif self.step == 2:
             with self.lock_in:
-                q = self.qpos
-                dq = self.qvel
-                quat = self.quat
-                omega = self.omega
+                dof_pos = self.qpos
+                dof_vel = self.qvel
+                base_quat = self.quat
+                base_ang_vel = self.omega
                 
                 x_vel_cmd = self.vx
                 y_vel_cmd = self.vy
@@ -320,76 +292,144 @@ class BxiExample(Node):
                 height_map = self.height_map
 
             self.obstacle_play_update()
-                                           
-            dof_pos = q[index_isaac_in_mujoco]
-            dof_vel = dq[index_isaac_in_mujoco]
-            quat = self.quat
-            g_vec = np.array([0.,0.,-1.])
-            p_g_vec = quat_rotate_inverse(quat,g_vec)
+            self.state_machine()
 
-            x, y, z, w = quat
-            t3 = +2.0 * (w * z + x * y)
-            t4 = +1.0 - 2.0 * (y * y + z * z)
-            self.base_yaw = np.arctan2(t3, t4)
+            gravity_vec = np.array([0.,0.,-1.])
+            projected_gravity_vec = quat_rotate_inverse(base_quat, gravity_vec)
+
+            rpy_angle = quaternion_to_euler_array(base_quat)
+            rpy_angle[rpy_angle > math.pi] -= 2 * math.pi
+            base_yaw = rpy_angle[2]
 
             ang_scale = 2.
-            # lin_scale = 2.
-            self.dyaw *= ang_scale
-            # x_vel_cmd *= lin_scale
             if abs(self.dyaw) < 0.1: self.dyaw = 0 # 死区
-            if self.loop_count_step_2 == 1:
-                self.target_yaw = self.base_yaw # 把初始传感器角度设为target
+            if self.loop_count_step_2 == 0:
+                self.target_yaw = base_yaw # 第一帧传感器yaw设为起点
             else:
-                self.target_yaw += self.dyaw * self.dt
-            yaw_delta = (self.target_yaw - self.base_yaw + np.pi) % (2*np.pi) - np.pi
-            # print(x_vel_cmd)
-            # print(self.target_yaw, self.base_yaw, yaw_delta)
-            obs_group={
-                "dof_pos":dof_pos,
-                "dof_vel":dof_vel,
-                "angular_velocity":omega,
+                self.target_yaw += self.dyaw * self.loop_dt
+            yaw_delta = (self.target_yaw - base_yaw) * ang_scale
+            yaw_delta = (yaw_delta + np.pi) % (2*np.pi) - np.pi
+
+            dof_pos_target = None
+            joint_kp_send = joint_kp.copy()
+            joint_kd_send = joint_kd.copy()
+            obs_group_23={
+                "dof_pos":dof_pos[index_isaac_in_mujoco_23],
+                "dof_vel":dof_vel[index_isaac_in_mujoco_23],
+                "angular_velocity":base_ang_vel,
                 "commands":np.array([x_vel_cmd, y_vel_cmd, yaw_vel_cmd]),
-                "projected_gravity":p_g_vec,
+                "projected_gravity":projected_gravity_vec,
+                "euler_angle":rpy_angle,
+                "height_map":height_map,
+                "yaw_delta":np.array([yaw_delta,yaw_delta]),
+            }
+            obs_group_12={
+                "dof_pos":dof_pos[index_isaac_in_mujoco_12],
+                "dof_vel":dof_vel[index_isaac_in_mujoco_12],
+                "angular_velocity":base_ang_vel,
+                "commands":np.array([x_vel_cmd, y_vel_cmd, yaw_vel_cmd]),
+                "projected_gravity":projected_gravity_vec,
+                "euler_angle":rpy_angle,
                 "height_map":height_map,
                 "yaw_delta":np.array([yaw_delta,yaw_delta]),
             }
 
-            target_q = self.agent.inference(obs_group)
-            
-            qpos = joint_nominal_pos.copy()
-            qpos[[index_isaac_in_mujoco]] = target_q
-            # qpos[4+3] += ankle_y_offset
-            # qpos[10+3] += ankle_y_offset
-            
-            # 缓启动 1秒内和初始位姿插值
-            blend = self.loop_count_step_2/(1.0/0.02)
-            if blend > 1.0:
-                blend = 1.0 
+            if self.state == robotState.stand:
+                # obs_group_12["dof_pos"][4] -= ankle_y_offset
+                # obs_group_12["dof_pos"][10] -= ankle_y_offset
+                agent_out = self.walk_agent.inference(obs_group_12)
+                # agent_out[4] += ankle_y_offset
+                # agent_out[10] += ankle_y_offset
+                dof_pos_target = joint_nominal_pos.copy()
+                dof_pos_target[index_isaac_in_mujoco_12] = agent_out
+                joint_kp_send[index_isaac_in_mujoco_12] = joint_info_12_example.joint_kp
+                joint_kd_send[index_isaac_in_mujoco_12] = joint_info_12_example.joint_kd
+
+            elif self.state == robotState.stand_to_jump:
+                # 进入跳跃状态后 先把手臂抬起来到启动位置
+                dof_pos_target = joint_nominal_pos.copy()
+                blend = min(self.stand_to_jump_counter.percent * 1.5, 1.0)
+                print("stand_to_jump:",blend)
+
+                # 上半身插值
+                upper_body_norminal = joint_nominal_pos[index_isaac_in_mujoco_23_upper_body]
+                upper_body_target = joint_info_23.high_jump_ref_pos_upper_body
+                dof_pos_target_upper_body = upper_body_norminal * (1. - blend) + upper_body_target * blend
+                dof_pos_target[index_isaac_in_mujoco_23_upper_body] = dof_pos_target_upper_body
+
+                # 下半身仍然用走路的控制
+                agent_out = self.walk_agent.inference(obs_group_12)
+                dof_pos_target[index_isaac_in_mujoco_12] = agent_out
+
+                joint_kp_send[index_isaac_in_mujoco_12] = joint_info_12_example.joint_kp
+                joint_kd_send[index_isaac_in_mujoco_12] = joint_info_12_example.joint_kd
+
+            elif self.state == robotState.jump:
+                if (self.loop_count % 2 == 0): # jump agent是50hz
+                    # print("jump inference")
+
+                    agent_out = self.jump_agent.inference(obs_group_23)
+                    dof_pos_target = joint_nominal_pos.copy()
+                    dof_pos_target[index_isaac_in_mujoco_23] = agent_out
+                    joint_kp_send[index_isaac_in_mujoco_23] = joint_info_23.joint_kp
+                    joint_kd_send[index_isaac_in_mujoco_23] = joint_info_23.joint_kd
+                else:
+                    # 50hz空白的一帧发送上一帧相同指令
+                    # print("jump inference skip")
+                    pass
+            elif self.state == robotState.jump_to_stand:
+                dof_pos_target = joint_nominal_pos.copy()
+                blend = min(self.jump_to_stand_counter.percent * 1.5, 1.0)
+                print("jump_to_stand:",blend)
+
+                # 上半身插值
+                upper_body_norminal = joint_nominal_pos[index_isaac_in_mujoco_23_upper_body]
+                upper_body_target = joint_info_23.high_jump_ref_pos_upper_body
+                dof_pos_target_upper_body = upper_body_target * (1. - blend) + upper_body_norminal * blend
+                dof_pos_target[index_isaac_in_mujoco_23_upper_body] = dof_pos_target_upper_body
+
+                # 下半身仍然用走路的控制
+                agent_out = self.walk_agent.inference(obs_group_12)
+                dof_pos_target[index_isaac_in_mujoco_12] = agent_out
+
+                joint_kp_send[index_isaac_in_mujoco_12] = joint_info_12_example.joint_kp
+                joint_kd_send[index_isaac_in_mujoco_12] = joint_info_12_example.joint_kd
             else:
-                print("blend:",blend)
-            qpos = joint_nominal_pos * (1. - blend) + qpos * blend
+                raise Exception
+
+            if dof_pos_target is None:
+                dof_pos_target = self.dof_pos_target_last
+                joint_kp_send = self.joint_kp_send_last
+                joint_kd_send = self.joint_kd_send_last
 
             # 软限位
-            upper_limit = q + (torque_limit - dq * joint_kd) / joint_kp
-            lower_limit = q + (-torque_limit - dq * joint_kd) / joint_kp
-            qpos = qpos.clip(lower_limit, upper_limit)
-            # torque = (qpos - q) * joint_kp + dq * joint_kd
-            # print("torque",torque[index_isaac_in_mujoco])
+            # upper_limit = dof_pos + (torque_limit - dof_vel * joint_kd) / joint_kp
+            # lower_limit = dof_pos + (-torque_limit - dof_vel * joint_kd) / joint_kp
+            # qpos = qpos.clip(lower_limit, upper_limit)
 
-            msg = bxiMsg.ActuatorCmds()
-            msg.header.frame_id = robot_name
-            msg.header.stamp = self.get_clock().now().to_msg()
-            msg.actuators_name = joint_name
-            msg.pos = qpos.tolist()
-            msg.vel = np.zeros(dof_num, dtype=np.float32).tolist()
-            msg.torque = np.zeros(dof_num, dtype=np.float32).tolist()
-            msg.kp = joint_kp.tolist()
-            msg.kd = joint_kd.tolist()
-            self.act_pub.publish(msg)
+            # torque = (qpos - dof_pos) * joint_kp + dof_vel * joint_kd
+            # print("torque",torque)
+
+            self.send_to_motor(dof_pos_target, joint_kp_send, joint_kd_send)
+            self.dof_pos_target_last = dof_pos_target.copy()
+            self.joint_kp_send_last = joint_kp_send.copy()
+            self.joint_kd_send_last = joint_kd_send.copy()
 
             self.loop_count_step_2 += 1
         self.loop_count += 1
     
+    def send_to_motor(self, dof_pos_target, joint_kp, joint_kd):
+        msg = bxiMsg.ActuatorCmds()
+        msg.header.frame_id = robot_name
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.actuators_name = joint_name
+        msg.pos = dof_pos_target.tolist()
+        msg.vel = np.zeros(dof_num, dtype=np.float32).tolist()
+        msg.torque = np.zeros(dof_num, dtype=np.float32).tolist()
+        msg.kp = joint_kp.tolist()
+        msg.kd = joint_kd.tolist()
+        self.act_pub.publish(msg)
+
     def robot_rest(self, reset_step, release):
         req = bxiSrv.RobotReset.Request()
         req.reset_step = reset_step
@@ -449,25 +489,7 @@ class BxiExample(Node):
             if self.step < 2:
                 self.prev_jump_btn = jump_btn
  
-            jump_btn_changed = (jump_btn != self.prev_jump_btn)
-            if jump_btn_changed:
-                if self.play_count < self.total_play_count:
-                    # 正在发送中 不重复发送
-                    pass
-                else:
-                    # self.obstacle_play_command_callback()
-                    # print("jump")
-                    pass
-                
-                if self.agent.jump:
-                    print("not jump")
-                    self.agent.jump = False
-                    self.agent.reset()
-                else:
-                    print("jump")
-                    self.agent.jump = True
-                    self.agent.reset()
-                    
+            self.jump_btn_changed = (jump_btn != self.prev_jump_btn)
             self.prev_jump_btn = jump_btn
 
     def imu_callback(self, msg):
