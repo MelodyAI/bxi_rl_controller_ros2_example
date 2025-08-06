@@ -108,7 +108,9 @@ private:
     int mode = 0;
     bool left_arm_toggle = false;   // 左手挥舞切换状态
     bool right_arm_toggle = false;  // 右手握手切换状态
-    bool jump_toggle = false;  // 发送障碍高程图
+    bool high_jump_toggle = false;  // 跳高/发送障碍高程图
+    bool far_jump_toggle = false;  // 立定跳远
+    bool dance_toggle = false;  // 舞蹈
 
     double vel_offset = 0.0;
 
@@ -157,7 +159,10 @@ private:
             message.mode = mode;
 
             // 设置手臂控制标志
-            message.btn_4 = jump_toggle ? 1 : 0;    // 发送障碍高程图
+            message.btn_8 = dance_toggle ? 1 : 0; // A
+            message.btn_9 = far_jump_toggle ? 1 : 0; // X
+            message.btn_10 = high_jump_toggle ? 1 : 0; // Y
+
             message.btn_6 = left_arm_toggle ? 1 : 0;    // BT6控制左手挥舞
             message.btn_7 = right_arm_toggle ? 1 : 0;   // BT7控制右手握手
 
@@ -236,19 +241,21 @@ private:
                             {
                                 stand_height = STAND_HEIGHT_MIN;
                             }
+                            far_jump_toggle = !far_jump_toggle;
                             printf("stand_height: %f\n", stand_height);
                         }
                         break;
                         case JS_GAIT_STAND_BT:{
                             const std::lock_guard<std::mutex> guard(lock_);
                             vel_offset = 0.0;
+                            dance_toggle = !dance_toggle;
                             printf("change to stand\n");
                         }
                         break;
                         case JS_GAIT_WALK_BT:{
                             const std::lock_guard<std::mutex> guard(lock_);
                             vel_offset = 0.0011;
-                            jump_toggle = !jump_toggle;
+                            high_jump_toggle = !high_jump_toggle;
                             printf("change to walk\n");
                         }
                         break;

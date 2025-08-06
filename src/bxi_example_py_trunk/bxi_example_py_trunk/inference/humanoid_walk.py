@@ -61,7 +61,7 @@ class humanoid_walk_onnx_Agent(baseAgent):
         actions = np.squeeze(self.onnx_session.run(["output"], input_feed))
 
     def get_phase(self):
-        phase = self.inference_count * self.dt / self.gait_period
+        phase = self.phase_count * self.dt / self.gait_period
         obs = np.array([np.sin(2. * np.pi * phase),
                         np.cos(2. * np.pi * phase)])
         return obs
