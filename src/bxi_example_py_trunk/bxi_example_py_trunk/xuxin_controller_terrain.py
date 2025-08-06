@@ -166,7 +166,7 @@ class BxiExample(Node):
         self.step = 0
         self.loop_count = 0
         self.loop_count_step_2 = 0
-        self.loop_dt = 0.01  # loop @100Hz # TODO:
+        self.loop_dt = 0.01  # loop @100Hz
         self.timer = self.create_timer(self.loop_dt, self.timer_callback, callback_group=self.timer_callback_group_1)
 
         # obstacle play
@@ -290,6 +290,7 @@ class BxiExample(Node):
                 y_vel_cmd = self.vy
                 yaw_vel_cmd = self.dyaw
                 height_map = self.height_map
+            # start = time.time()
 
             # self.obstacle_play_update()
             self.state_machine()
@@ -410,6 +411,8 @@ class BxiExample(Node):
             self.joint_kp_send_last = joint_kp_send.copy()
             self.joint_kd_send_last = joint_kd_send.copy()
 
+            # end = time.time()
+            # print("calculate time:", end-start)
             self.loop_count_step_2 += 1
         self.loop_count += 1
     

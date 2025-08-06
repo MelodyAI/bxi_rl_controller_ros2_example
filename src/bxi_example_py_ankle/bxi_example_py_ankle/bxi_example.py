@@ -22,7 +22,8 @@ from sensor_msgs.msg import JointState
 from .arm_motion_controller import ArmMotionController # 导入左手挥舞控制器
 from .right_arm_handshake_controller import RightArmHandshakeController # 导入右手握手控制器
 from .running_arm_controller import RunningArmController # 导入奔跑手臂控制器
-
+from .logger import FileLogger
+logger = FileLogger("/home/xuxin/allCode/bxi_ros2_example/observations",0.01)
 import onnxruntime as ort
 
 robot_name = "elf25"
@@ -274,6 +275,7 @@ class BxiExample(Node):
         
         self.initialize_onnx(self.onnx_file)
         self.action[:] = self.inference_step(policy_input)
+        self.action[:] = 0
 
         self.vx = 1.0
         self.vy = 0
@@ -406,7 +408,7 @@ class BxiExample(Node):
                 x_vel_cmd = self.vx
                 y_vel_cmd = self.vy
                 yaw_vel_cmd = self.dyaw
-            
+            # start = time.time()
             count_lowlevel = self.loop_count
             
             if hasattr(env_cfg.commands,"sw_switch"):
@@ -453,6 +455,16 @@ class BxiExample(Node):
             self.action[:] = self.inference_step(policy_input)
             # self.action = self.action*0.8 + self.last_action*0.2
             self.action = np.clip(self.action, -env_cfg.normalization.clip_actions, env_cfg.normalization.clip_actions)
+
+            # logger.data_log(np.concat((
+            #     np.array([x_vel_cmd,y_vel_cmd,yaw_vel_cmd]),
+            #     q,
+            #     dq,
+            #     omega,
+            #     eu_ang,
+            #     policy_input.squeeze().copy(),
+            #     self.action.squeeze().copy(),
+            # )).tolist())
 
             self.target_q = self.action * env_cfg.control.action_scale
             
@@ -535,6 +547,8 @@ class BxiExample(Node):
             msg.kd = joint_kd.tolist()
             self.act_pub.publish(msg)
             self.last_action=self.action.copy()
+            # end = time.time()
+            # print("calculate time:", end-start)
 
         self.loop_count += 1
     
