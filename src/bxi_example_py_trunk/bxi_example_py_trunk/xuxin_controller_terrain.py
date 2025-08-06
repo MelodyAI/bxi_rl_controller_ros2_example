@@ -167,15 +167,14 @@ class BxiExample(Node):
         video_fps = 30
         # 跳远
         video_buffer_length = 165
-        motion_difficulty = 0.65
+        motion_difficulty = 0.15 # [0.15, 0.65]
         motion_time_increment = motion_agent_dt * video_fps / video_buffer_length
         self.far_jump_agent=humanoid_motion_tracking_Agent(self.policy_file_dict["far_jump"],
                                                             motion_time_increment, motion_difficulty, motion_end=1.0)
 
         # 跳高
         video_buffer_length = 108
-        # motion_difficulty = 0.3
-        motion_difficulty = 0.15
+        motion_difficulty = 0.15 # [0.15, 0.35]
         motion_time_increment = motion_agent_dt * video_fps / video_buffer_length
         self.high_jump_agent=humanoid_motion_tracking_Agent(self.policy_file_dict["high_jump"],
                                                             motion_time_increment, motion_difficulty, motion_end=0.6)
