@@ -4,6 +4,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+import json
 
 def generate_launch_description():
 
@@ -13,6 +14,8 @@ def generate_launch_description():
         "dance": "policy/0805_dance.onnx",
         "walk_example": "policy/walk_example.onnx",
     }
+    for key, value in policy_file_dict.items():
+        policy_file_dict[key] = os.path.join(get_package_share_path("bxi_example_py_trunk"), value)
 
     return LaunchDescription(
         [
@@ -34,7 +37,7 @@ def generate_launch_description():
                 output="screen",
                 parameters=[
                     {"/topic_prefix": "hardware/"},
-                    {"/policy_file_dict": policy_file_dict},
+                    {"/policy_file_dict": json.dumps(policy_file_dict)},
                 ],
                 emulate_tty=True,
                 arguments=[("__log_level:=debug")],

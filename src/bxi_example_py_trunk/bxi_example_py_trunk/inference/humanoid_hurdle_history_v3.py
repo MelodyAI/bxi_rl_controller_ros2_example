@@ -98,8 +98,8 @@ class humanoid_hurdle_onnx_Agent(baseAgent):
         obs_projected_gravity = obs_group["projected_gravity"]
         obs_base_ang_vel = obs_group["angular_velocity"] * self.obs_scale["ang_vel"]
         motion_time_norm = self.agent_count * self.motion_time_increment
-        if motion_time_norm > 0.8:
-            motion_time_norm = 0.8
+        if motion_time_norm > 0.9:
+            motion_time_norm = 0.9
             self.jump =  False
         print(f"motion percent:{motion_time_norm:.2f}")
         motion_time_norm = np.array([motion_time_norm])
