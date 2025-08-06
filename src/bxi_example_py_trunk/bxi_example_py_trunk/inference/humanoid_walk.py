@@ -81,7 +81,8 @@ class humanoid_walk_onnx_Agent(baseAgent):
         obs_commands[...,2] *= self.obs_scale["ang_vel_cmd"]
         obs_phase = self.get_phase()
         if stand:
-            obs_phase[:] = 0
+            obs_phase[0] = 0
+            obs_phase[1] = 1
             self.phase_count = 0
 
         # 本体感知proprioception 47
