@@ -8,7 +8,7 @@ import onnxruntime as ort
 
 
 class humanoid_motion_tracking_Agent(baseAgent):
-    def __init__(self, policy_path, motion_time_increment, motion_difficulty, motion_end=1.0):
+    def __init__(self, policy_path, motion_time_increment, motion_difficulty, motion_range=[0., 1.]):
         """
         motion_time_increment: 每次step motion_norm_time的增加量
         motion_difficulty: 动作难度
@@ -66,7 +66,8 @@ class humanoid_motion_tracking_Agent(baseAgent):
 
         self.motion_time_increment = motion_time_increment
         self.motion_difficulty = motion_difficulty
-        self.motion_end = motion_end
+        self.motion_start = motion_range[0]
+        self.motion_end = motion_range[1]
 
         self.bootstrap()
 
@@ -146,7 +147,7 @@ class humanoid_motion_tracking_Agent(baseAgent):
         self.last_actions_buf = np.zeros(self.num_actions)
         self.exp_filter.reset()
         self.is_reset = True  # 标志刚刚重置
-        self.agent_count = 0
+        self.agent_count = self.motion_start / self.motion_time_increment
 
 if __name__=="__main__":
     motion_agent_dt = 0.02

@@ -12,7 +12,8 @@ def generate_launch_description():
     xml_file = os.path.join(get_package_share_path("description"), xml_file_name)
 
     policy_file_dict = {
-        "high_jump": "policy/0805_highjump.onnx",
+        # "high_jump": "policy/0805_highjump.onnx",
+        "high_jump": "policy/0807_highjump.onnx",
         "far_jump": "policy/0805_farjump.onnx",
         "dance": "policy/0805_dance.onnx",
         "walk_example": "policy/walk_example.onnx",

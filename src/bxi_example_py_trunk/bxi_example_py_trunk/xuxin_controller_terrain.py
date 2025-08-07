@@ -170,21 +170,22 @@ class BxiExample(Node):
         motion_difficulty = 0.15 # [0.15, 0.65]
         motion_time_increment = motion_agent_dt * video_fps / video_buffer_length
         self.far_jump_agent=humanoid_motion_tracking_Agent(self.policy_file_dict["far_jump"],
-                                                            motion_time_increment, motion_difficulty, motion_end=1.0)
+                                                            motion_time_increment, motion_difficulty)
 
         # 跳高
-        video_buffer_length = 108
+        # video_buffer_length = 108 # 0805
+        video_buffer_length = 261 # 0807
         motion_difficulty = 0.15 # [0.15, 0.35]
         motion_time_increment = motion_agent_dt * video_fps / video_buffer_length
         self.high_jump_agent=humanoid_motion_tracking_Agent(self.policy_file_dict["high_jump"],
-                                                            motion_time_increment, motion_difficulty, motion_end=0.6)
+                                                            motion_time_increment, motion_difficulty, motion_range=[0.15,0.85])
 
         # 跳舞
         video_buffer_length = 588
         motion_difficulty = 0.55
         motion_time_increment = motion_agent_dt * video_fps / video_buffer_length
         self.dance_agent=humanoid_motion_tracking_Agent(self.policy_file_dict["dance"],
-                                                        motion_time_increment, motion_difficulty, motion_end=1.0)
+                                                        motion_time_increment, motion_difficulty)
 
         self.vx = 0.
         self.vy = 0.
@@ -472,7 +473,8 @@ class BxiExample(Node):
                 # 下半身仍然用走路的控制
                 agent_out = self.walk_agent.inference(obs_group)
                 blend2 = min(self.motion_to_stand_counter.percent * 4.0, 1.0) # 0.5s
-                dof_pos_target[index_isaac_in_mujoco_12_example] = self.motion_to_stand_counter.dof_pos_start[index_isaac_in_mujoco_12_example] * (1-blend2) + agent_out * blend2
+                # dof_pos_target[index_isaac_in_mujoco_12_example] = self.motion_to_stand_counter.dof_pos_start[index_isaac_in_mujoco_12_example] * (1-blend2) + agent_out * blend2
+                dof_pos_target[index_isaac_in_mujoco_12_example] = agent_out
         
                 # joint_kp_send[index_isaac_in_mujoco_12_example] = np.array(joint_info_12_example.joint_kp, dtype=np.float32) * (0.5 + 0.5 * self.motion_to_stand_counter.percent)
                 joint_kp_send[index_isaac_in_mujoco_12_example] = joint_info_12_example.joint_kp
