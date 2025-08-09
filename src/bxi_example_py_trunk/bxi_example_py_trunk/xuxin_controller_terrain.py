@@ -260,20 +260,20 @@ class BxiExample(Node):
                 self.stand_to_motion_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
                 self.motion_type = motionType.high_jump
                 print("state: stand_to_motion [high jump]")
-            elif self.far_jump_btn_changed:
-                self.state = robotState.stand_to_motion
-                upper_body_current = self.qpos[index_isaac_in_mujoco_23_upper_body]
-                upper_body_target = joint_info_23.far_jump_ref_pos_upper_body
-                self.stand_to_motion_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
-                self.motion_type = motionType.far_jump
-                print("state: stand_to_motion [far jump]")
-            elif self.dance_btn_changed:
-                self.state = robotState.stand_to_motion
-                upper_body_current = self.qpos[index_isaac_in_mujoco_23_upper_body]
-                upper_body_target = joint_info_23.dance_ref_pos_upper_body
-                self.stand_to_motion_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
-                self.motion_type = motionType.dance
-                print("state: stand_to_motion [dance]")
+            # elif self.far_jump_btn_changed:
+            #     self.state = robotState.stand_to_motion
+            #     upper_body_current = self.qpos[index_isaac_in_mujoco_23_upper_body]
+            #     upper_body_target = joint_info_23.far_jump_ref_pos_upper_body
+            #     self.stand_to_motion_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
+            #     self.motion_type = motionType.far_jump
+            #     print("state: stand_to_motion [far jump]")
+            # elif self.dance_btn_changed:
+            #     self.state = robotState.stand_to_motion
+            #     upper_body_current = self.qpos[index_isaac_in_mujoco_23_upper_body]
+            #     upper_body_target = joint_info_23.dance_ref_pos_upper_body
+            #     self.stand_to_motion_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
+            #     self.motion_type = motionType.dance
+            #     print("state: stand_to_motion [dance]")
             else:
                 pass
             
@@ -286,14 +286,14 @@ class BxiExample(Node):
                     self.high_jump_agent.reset()
                     self.high_jump_agent.motion_playing = True
                     print("state: motion [jump]")
-                elif self.motion_type == motionType.far_jump:
-                    self.far_jump_agent.reset()
-                    self.far_jump_agent.motion_playing = True
-                    print("state: motion [far_jump]")
-                elif self.motion_type == motionType.dance:
-                    self.dance_agent.reset()
-                    self.dance_agent.motion_playing = True
-                    print("state: motion [dance]")
+                # elif self.motion_type == motionType.far_jump:
+                #     self.far_jump_agent.reset()
+                #     self.far_jump_agent.motion_playing = True
+                #     print("state: motion [far_jump]")
+                # elif self.motion_type == motionType.dance:
+                #     self.dance_agent.reset()
+                #     self.dance_agent.motion_playing = True
+                #     print("state: motion [dance]")
 
         elif self.state==robotState.motion:
             # 判断动作结束

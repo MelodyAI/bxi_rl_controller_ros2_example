@@ -53,9 +53,9 @@ using namespace std;
 
 #define AXIS_VALUE_MAX 32767
 
-#define STAND_HEIGHT 0.85
-#define STAND_HEIGHT_MIN    0.75
-#define STAND_HEIGHT_MAX    0.88
+#define STAND_HEIGHT 1.0
+#define STAND_HEIGHT_MIN    1.0
+#define STAND_HEIGHT_MAX    3.0
 
 class COMPublisher : public rclcpp::Node{
 public:
@@ -226,7 +226,7 @@ private:
                         break;
                         case JS_HEIGHT_UPPER_BT:{
                             const std::lock_guard<std::mutex> guard(lock_);
-                            stand_height += 0.01;
+                            stand_height += 0.2;
                             if (stand_height > STAND_HEIGHT_MAX)
                             {
                                 stand_height = STAND_HEIGHT_MAX;
@@ -236,7 +236,7 @@ private:
                         break;
                         case JS_HEIGHT_LOWER_BT:{
                             const std::lock_guard<std::mutex> guard(lock_);
-                            stand_height -= 0.01;
+                            stand_height -= 0.2;
                             if (stand_height < STAND_HEIGHT_MIN)
                             {
                                 stand_height = STAND_HEIGHT_MIN;
