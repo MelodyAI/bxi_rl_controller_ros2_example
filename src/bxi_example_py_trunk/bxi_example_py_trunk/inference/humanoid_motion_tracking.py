@@ -91,6 +91,8 @@ class humanoid_motion_tracking_Agent(baseAgent):
         obs_projected_gravity = obs_group["projected_gravity"]
         obs_base_ang_vel = obs_group["angular_velocity"] * self.obs_scale["ang_vel"]
         motion_time_norm = self.agent_count * self.motion_time_increment
+        if motion_time_norm < 0.:
+            motion_time_norm = 0
         if motion_time_norm > self.motion_end:
             motion_time_norm = self.motion_end
             self.motion_playing =  False
