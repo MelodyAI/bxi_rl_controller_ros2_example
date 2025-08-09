@@ -26,6 +26,7 @@ from sensor_msgs.msg import JointState
 from bxi_example_py_trunk.inference.humanoid_hurdle_history_v3 import humanoid_hurdle_onnx_Agent
 from bxi_example_py_trunk.inference.humanoid_dh_long_comp_onnx import humanoid_dh_long_comp_onnx_Agent
 from bxi_example_py_trunk.inference.humanoid_walk import humanoid_walk_onnx_Agent
+from bxi_example_py_trunk.inference.humanoid_walk_stand_height import humanoid_walk_stand_height_onnx_Agent
 from bxi_example_py_trunk.inference.humanoid_motion_tracking import humanoid_motion_tracking_Agent
 
 from bxi_example_py_trunk.utils.legged_math import quat_rotate_inverse,quaternion_to_euler_array
@@ -161,7 +162,8 @@ class BxiExample(Node):
         self.omega = np.zeros(3,dtype=np.double)
         self.quat = np.zeros(4,dtype=np.double)
         
-        self.walk_agent = humanoid_walk_onnx_Agent(self.policy_file_dict["walk_example"])
+        # self.walk_agent = humanoid_walk_onnx_Agent(self.policy_file_dict["walk_example"])
+        self.walk_agent = humanoid_walk_stand_height_onnx_Agent(self.policy_file_dict["walk_example_height"])
         
         motion_agent_dt = 0.02
         video_fps = 30
@@ -190,6 +192,7 @@ class BxiExample(Node):
         self.vx = 0.
         self.vy = 0.
         self.dyaw = 0.
+        self.stand_height = 1.
         self.height_map = 1.05 - np.zeros(18*9,dtype=np.double) # base_pos_z - height
 
         self.step = 0
@@ -402,6 +405,7 @@ class BxiExample(Node):
                 "euler_angle":rpy_angle,
                 "height_map":height_map,
                 "yaw_delta":np.array([yaw_delta,yaw_delta]),
+                "stand_height":np.array([self.stand_height]),
             }
             if ((self.state == robotState.stand)or
                 (self.state == robotState.stand_to_motion)or
@@ -566,6 +570,7 @@ class BxiExample(Node):
             self.vx = msg.vel_des.x
             self.vy = msg.vel_des.y
             self.dyaw = msg.yawdot_des
+            self.stand_height = msg.height_des
 
             btn_8 = msg.btn_8 # A
             btn_9 = msg.btn_9 # X

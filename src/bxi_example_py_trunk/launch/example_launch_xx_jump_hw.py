@@ -15,6 +15,7 @@ def generate_launch_description():
         "far_jump": "policy/0805_farjump.onnx",
         "dance": "policy/0805_dance.onnx",
         "walk_example": "policy/walk_example.onnx",
+        "walk_example_height": "policy/walk_example_height.onnx",
     }
     for key, value in policy_file_dict.items():
         policy_file_dict[key] = os.path.join(get_package_share_path("bxi_example_py_trunk"), value)
