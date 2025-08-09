@@ -98,6 +98,15 @@ joint_names_upper_body = [ # isaacgym顺序
     "r_elb_y_joint",    # 右臂_肘关节_y轴
     "r_elb_z_joint",    # 右臂_肘关节_y轴
 ]
+
+joint_kp_upper_body = [
+    20,20,20,20,20,
+    20,20,20,20,20,
+]
+joint_kd_upper_body = [
+    1.5,1.5,0.8,1.5,0.8,
+    1.5,1.5,0.8,1.5,0.8,
+]
 high_jump_ref_pos_upper_body = np.array([high_jump_ref_pos[joint_names.index(name)] for name in joint_names_upper_body])
 far_jump_ref_pos_upper_body = np.array([far_jump_ref_pos[joint_names.index(name)] for name in joint_names_upper_body])
 dance_ref_pos_upper_body = np.array([dance_ref_pos[joint_names.index(name)] for name in joint_names_upper_body])
