@@ -4,13 +4,12 @@ from bxi_example_py_trunk.utils.exp_filter import expFilter
 import time
 import onnxruntime as ort
 
-class humanoid_dh_long_onnx_Agent(baseAgent):
+class humanoid_comp_15dof_onnx_Agent(baseAgent):
     def __init__(self, policy_path):
-        self.num_prop_obs_input = 47
-        self.num_estimator_input = 42
-        self.include_history_steps = 5
-        self.long_history = 64
-        self.num_actions = 12
+        self.num_prop_obs_input = 56
+        self.history = 1
+        # self.history = 5
+        self.num_actions = 15
 
         providers = [
             'CUDAExecutionProvider',  # 优先使用GPU
@@ -30,7 +29,10 @@ class humanoid_dh_long_onnx_Agent(baseAgent):
         )
         
         # dof_pos归一化范围
-        dof_pos_limits=[[-0.7850,  0.7850],
+        dof_pos_limits=[[-0.5230,  0.5230],
+                        [-0.2610,  0.2610],
+                        [-0.1570,  0.1570],
+                        [-0.7850,  0.7850],
                         [-0.5230,  0.7850],
                         [-2.0000,  1.0000],
                         [ 0.0000,  2.3550],
@@ -44,8 +46,10 @@ class humanoid_dh_long_onnx_Agent(baseAgent):
                         [-0.3490,  0.3490]]
         self.dof_pos_limits=np.array(dof_pos_limits)
 
-        self.default_dof_pos = [0., 0., -0.3, 0.6, -0.3, 0.,
-                                0., 0., -0.3, 0.6, -0.3, 0.]
+        self.default_dof_pos = [
+            0., 0., 0.,
+            0., 0., -0.3, 0.6, -0.3, 0.,
+            0., 0., -0.3, 0.6, -0.3, 0.]
         self.default_dof_pos = np.array(self.default_dof_pos)
 
         l_low=self.default_dof_pos-self.dof_pos_limits[:,0]
@@ -61,21 +65,19 @@ class humanoid_dh_long_onnx_Agent(baseAgent):
         self.clip_observation = 100.
         self.clip_action = 100.
 
-        self.prop_obs_history = np.zeros((self.num_prop_obs_input,self.long_history))
-        self.estimator_obs_history = np.zeros((self.num_estimator_input,self.include_history_steps))
+        self.prop_obs_history = np.zeros((self.num_prop_obs_input,self.history))
 
         self.last_actions_buf = np.zeros(self.num_actions)
         self.inference_count = 0
         self.dt = 0.01
         self.gait_period = 1.0
         self.exp_filter = expFilter(0.6)
-        self.bootstrap()
 
     def bootstrap(self):
         "预热用"
         obs_group={
-            "dof_pos":np.zeros(12,dtype=float),
-            "dof_vel":np.zeros(12,dtype=float),
+            "dof_pos":np.zeros(15,dtype=float),
+            "dof_vel":np.zeros(15,dtype=float),
             "angular_velocity":np.zeros(3,dtype=float),
             "commands":np.zeros(3,dtype=float),
             "projected_gravity":np.array([0.,0.,-1.],dtype=float),
@@ -113,22 +115,10 @@ class humanoid_dh_long_onnx_Agent(baseAgent):
             obs_phase
         ),axis=-1)
 
-        # estimator 42
-        estimator_obs = np.concatenate((
-            obs_dof_pos,
-            obs_dof_vel,
-            obs_last_actions,
-            obs_base_ang_vel,
-            obs_projected_gravity,
-        ),axis=-1)
-
         self.prop_obs_history=np.roll(self.prop_obs_history,shift=-1,axis=1)
         self.prop_obs_history[:,-1] = prop_obs
 
-        self.estimator_obs_history=np.roll(self.estimator_obs_history,shift=-1,axis=1)
-        self.estimator_obs_history[:,-1] = estimator_obs
-
-        return self.prop_obs_history, self.estimator_obs_history
+        return self.prop_obs_history.flatten()
 
     def build_observations_v2(self, obs_group):
         for obs in obs_group.values():
@@ -154,31 +144,17 @@ class humanoid_dh_long_onnx_Agent(baseAgent):
             obs_phase
         ),axis=-1)
 
-        # estimator 42
-        estimator_obs = np.concatenate((
-            obs_dof_pos,
-            obs_dof_vel,
-            obs_last_actions,
-            obs_base_ang_vel,
-            obs_projected_gravity,
-        ),axis=-1)
-
-        return prop_obs, estimator_obs
+        return prop_obs
 
     def inference(self, obs_group):
-
-        prop_obs_history, estimator_obs_history = self.build_observations(obs_group)
-
-        input_feed = {
-            "prop_obs": prop_obs_history.flatten()[None,:].astype(np.float32),
-            "estimator_obs": estimator_obs_history.flatten()[None,:].astype(np.float32),
-        }
-        actions = np.squeeze(self.onnx_session.run(["output"], input_feed)) # test
+        prop_obs = self.build_observations(obs_group)
+        input_feed = {"prop_obs": prop_obs[None,:].astype(np.float32)}
+        actions = np.squeeze(self.onnx_session.run(["output"], input_feed))
         # actions = np.clip(actions, -self.clip_action, self.clip_action) # tanh do not need clip
 
         self.last_actions_buf[:] = actions
 
-        dof_pos_target_urdf = actions * self.action_scale + self.default_dof_pos
+        dof_pos_target_urdf = actions
 
         # dof_pos_target_urdf = self.exp_filter.filter(dof_pos_target_urdf)
         self.inference_count += 1
@@ -187,23 +163,22 @@ class humanoid_dh_long_onnx_Agent(baseAgent):
     def reset(self):
         self.last_actions_buf = np.zeros(self.num_actions)
         norminal_obs_group = {
-            "dof_pos":np.zeros(12),
-            "dof_vel":np.zeros(12),
+            "dof_pos":np.zeros(15),
+            "dof_vel":np.zeros(15),
             "angular_velocity":np.zeros(3),
             "projected_gravity":np.array([0.,0.,-1.]),
             "commands":np.zeros(3),
         }
-        norminal_obs, estimator_obs =self.build_observations_v2(norminal_obs_group)
+        norminal_obs =self.build_observations_v2(norminal_obs_group)
         self.prop_obs_history[:,:] = norminal_obs[:,None]
-        self.estimator_obs_history[:,:] = estimator_obs[:,None] 
         self.exp_filter.reset()
         self.inference_count = 0
 
 if __name__=="__main__":
-    a=humanoid_dh_long_onnx_Agent("/home/xuxin/allCode/bxi_ros2_example/src/bxi_example_py_trunk/policy/Aug07_12-29-51_model_522500.onnx")
+    a=humanoid_comp_15dof_onnx_Agent("/home/xuxin/allCode/bxi_ros2_example/src/bxi_example_py_trunk/policy/Aug07_12-29-51_model_522500_compensate.onnx")
     obs_group={
-        "dof_pos":np.zeros(12),
-        "dof_vel":np.zeros(12),
+        "dof_pos":np.zeros(15),
+        "dof_vel":np.zeros(15),
         "angular_velocity":np.zeros(3),
         "projected_gravity":np.array([0.,0.,-1.]),
         "commands":np.zeros(3),
