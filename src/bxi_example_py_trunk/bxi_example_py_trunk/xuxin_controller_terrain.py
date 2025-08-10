@@ -28,6 +28,7 @@ from bxi_example_py_trunk.inference.humanoid_dh_long_comp_onnx import humanoid_d
 from bxi_example_py_trunk.inference.humanoid_walk import humanoid_walk_onnx_Agent
 from bxi_example_py_trunk.inference.humanoid_walk_stand_height import humanoid_walk_stand_height_onnx_Agent
 from bxi_example_py_trunk.inference.humanoid_motion_tracking import humanoid_motion_tracking_Agent
+from bxi_example_py_trunk.inference.humanoid_dance import humanoid_dance_Agent
 
 from bxi_example_py_trunk.utils.legged_math import quat_rotate_inverse,quaternion_to_euler_array
 from bxi_example_py_trunk.utils.counter import Counter, recoverCounter
@@ -184,11 +185,11 @@ class BxiExample(Node):
                                                             motion_time_increment, motion_difficulty, motion_range=[0.3,0.65])
 
         # 跳舞
-        video_buffer_length = 588
-        motion_difficulty = 0.55
+        video_buffer_length = 2689
+        motion_difficulty = 0.
         motion_time_increment = motion_agent_dt * video_fps / video_buffer_length
-        self.dance_agent=humanoid_motion_tracking_Agent(self.policy_file_dict["dance"],
-                                                        motion_time_increment, motion_difficulty)
+        self.dance_agent=humanoid_dance_Agent(self.policy_file_dict["dance"],
+                                              motion_time_increment, motion_difficulty)
 
         self.vx = 0.
         self.vy = 0.
@@ -252,48 +253,46 @@ class BxiExample(Node):
     def state_machine(self):
         "状态机"
         if self.state==robotState.stand:
-            if self.high_jump_btn_changed:
-                # 进入跳跃准备状态
-                self.state = robotState.stand_to_motion
-                upper_body_current = self.qpos[index_isaac_in_mujoco_23_upper_body]
-                upper_body_target = joint_info_23.high_jump_ref_pos_upper_body
-                self.stand_to_motion_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
-                self.motion_type = motionType.high_jump
-                print("state: stand_to_motion [high jump]")
-            # elif self.far_jump_btn_changed:
+            # if self.high_jump_btn_changed:
+            #     # 进入跳跃准备状态
+            #     self.state = robotState.stand_to_motion
+            #     upper_body_current = self.qpos[index_isaac_in_mujoco_23_upper_body]
+            #     upper_body_target = joint_info_23.high_jump_ref_pos_upper_body
+            #     self.stand_to_motion_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
+            #     self.motion_type = motionType.high_jump
+            #     print("state: stand_to_motion [high jump]")
+            # if self.far_jump_btn_changed:
             #     self.state = robotState.stand_to_motion
             #     upper_body_current = self.qpos[index_isaac_in_mujoco_23_upper_body]
             #     upper_body_target = joint_info_23.far_jump_ref_pos_upper_body
             #     self.stand_to_motion_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
             #     self.motion_type = motionType.far_jump
             #     print("state: stand_to_motion [far jump]")
-            # elif self.dance_btn_changed:
-            #     self.state = robotState.stand_to_motion
-            #     upper_body_current = self.qpos[index_isaac_in_mujoco_23_upper_body]
-            #     upper_body_target = joint_info_23.dance_ref_pos_upper_body
-            #     self.stand_to_motion_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
-            #     self.motion_type = motionType.dance
-            #     print("state: stand_to_motion [dance]")
-            else:
-                pass
+            if self.dance_btn_changed:
+                self.state = robotState.stand_to_motion
+                upper_body_current = self.qpos[index_isaac_in_mujoco_23_upper_body]
+                upper_body_target = joint_info_23.dance_ref_pos_upper_body
+                self.stand_to_motion_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
+                self.motion_type = motionType.dance
+                print("state: stand_to_motion [dance]")
             
         elif self.state==robotState.stand_to_motion:
             self.stand_to_motion_counter.step()
             if self.stand_to_motion_counter.finished:
                 self.state=robotState.motion
                 self.stand_to_motion_counter = None
-                if self.motion_type == motionType.high_jump:
-                    self.high_jump_agent.reset()
-                    self.high_jump_agent.motion_playing = True
-                    print("state: motion [jump]")
-                # elif self.motion_type == motionType.far_jump:
+                # if self.motion_type == motionType.high_jump:
+                #     self.high_jump_agent.reset()
+                #     self.high_jump_agent.motion_playing = True
+                #     print("state: motion [jump]")
+                # if self.motion_type == motionType.far_jump:
                 #     self.far_jump_agent.reset()
                 #     self.far_jump_agent.motion_playing = True
                 #     print("state: motion [far_jump]")
-                # elif self.motion_type == motionType.dance:
-                #     self.dance_agent.reset()
-                #     self.dance_agent.motion_playing = True
-                #     print("state: motion [dance]")
+                if self.motion_type == motionType.dance:
+                    self.dance_agent.reset()
+                    self.dance_agent.motion_playing = True
+                    print("state: motion [dance]")
 
         elif self.state==robotState.motion:
             # 判断动作结束
@@ -313,28 +312,28 @@ class BxiExample(Node):
             #     self.walk_agent.reset()
             #     print("state: motion_to_stand")
 
-            # if self.motion_type == motionType.dance and (not self.dance_agent.motion_playing):
-            #     self.state=robotState.motion_to_stand
-            #     upper_body_current = self.qpos
-            #     upper_body_target = joint_nominal_pos
-            #     self.motion_to_stand_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
-            #     self.walk_agent.reset()
-            #     print("state: motion_to_stand")
+            if self.motion_type == motionType.dance and (not self.dance_agent.motion_playing):
+                self.state=robotState.motion_to_stand
+                upper_body_current = self.qpos
+                upper_body_target = joint_nominal_pos
+                self.motion_to_stand_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
+                self.walk_agent.reset()
+                print("state: motion_to_stand")
 
-            if self.high_jump_btn_changed:
-                self.high_jump_btn_changed = False
-                # # 进入跳跃准备状态
-                # self.state = robotState.stand_to_motion
-                # upper_body_current = self.qpos[index_isaac_in_mujoco_23_upper_body]
-                # upper_body_target = joint_info_23.high_jump_ref_pos_upper_body
-                # self.stand_to_motion_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
-                # self.motion_type = motionType.high_jump
-                # print("state: stand_to_motion [high jump]")  
+            # if self.high_jump_btn_changed:
+            #     self.high_jump_btn_changed = False
+            #     # # 进入跳跃准备状态
+            #     # self.state = robotState.stand_to_motion
+            #     # upper_body_current = self.qpos[index_isaac_in_mujoco_23_upper_body]
+            #     # upper_body_target = joint_info_23.high_jump_ref_pos_upper_body
+            #     # self.stand_to_motion_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
+            #     # self.motion_type = motionType.high_jump
+            #     # print("state: stand_to_motion [high jump]")  
 
-                # 直接启动
-                self.high_jump_agent.reset()
-                self.high_jump_agent.motion_playing = True
-                print("state: motion [jump]")       
+            #     # 直接启动
+            #     self.high_jump_agent.reset()
+            #     self.high_jump_agent.motion_playing = True
+            #     print("state: motion [jump]")       
 
         elif(self.state==robotState.motion_to_stand):
             self.motion_to_stand_counter.step()
@@ -464,11 +463,11 @@ class BxiExample(Node):
             elif self.state == robotState.motion:
                 if (self.loop_count % 2 == 0): # jump agent是50hz
                     # print("jump inference")
-                    if self.motion_type==motionType.high_jump:
-                        agent_out = self.high_jump_agent.inference(obs_group)
-                    elif self.motion_type==motionType.far_jump:
-                        agent_out = self.far_jump_agent.inference(obs_group)
-                    elif self.motion_type==motionType.dance:
+                    # if self.motion_type==motionType.high_jump:
+                    #     agent_out = self.high_jump_agent.inference(obs_group)
+                    # if self.motion_type==motionType.far_jump:
+                    #     agent_out = self.far_jump_agent.inference(obs_group)
+                    if self.motion_type==motionType.dance:
                         agent_out = self.dance_agent.inference(obs_group)
 
                     dof_pos_target = joint_nominal_pos.copy()
