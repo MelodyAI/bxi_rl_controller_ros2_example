@@ -39,6 +39,8 @@ setup(
         ('share/' + package_name + '/launch', ['launch/example_launch_xx_terrain_hw.py']),
         ('share/' + package_name + '/launch', ['launch/example_launch_xx_jump.py']),
         ('share/' + package_name + '/launch', ['launch/example_launch_xx_jump_hw.py']),
+        ('share/' + package_name + '/launch', ['launch/example_launch_high_jump.py']),
+        ('share/' + package_name + '/launch', ['launch/example_launch_high_jump_hw.py']),
         # ('share/' + package_name + '/launch', ['launch/example_launch_hw_slope.py']),
     ] + get_data_files(),
     install_requires=['setuptools'],
@@ -53,6 +55,7 @@ setup(
             'bxi_example_py_trunk = bxi_example_py_trunk.bxi_example:main',
             'xuxin_controller = bxi_example_py_trunk.xuxin_controller:main',
             'xuxin_controller_terrain = bxi_example_py_trunk.xuxin_controller_terrain:main',
+            'high_jump_controller = bxi_example_py_trunk.high_jump_controller:main'
         ],
     },
 )
