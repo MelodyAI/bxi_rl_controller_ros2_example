@@ -43,8 +43,8 @@ robot_name = "elf25"
 dof_num = 25
 dof_use = 12
 
-# ankle_y_offset = 0.04
-ankle_y_offset = 0.0
+ankle_y_offset = 0.1 # +向后倒 -向前倒
+# ankle_y_offset = 0.0
 
 joint_name = (
     "waist_y_joint",
@@ -422,8 +422,8 @@ class BxiExample(Node):
                 "yaw_delta":np.array([yaw_delta,yaw_delta]),
                 "stand_height":np.array([self.stand_height]),
             }
-            # dof_pos[7] -= ankle_y_offset
-            # dof_pos[13] -= ankle_y_offset
+            dof_pos[7] -= ankle_y_offset
+            dof_pos[13] -= ankle_y_offset
             if ((self.state == robotState.stand)or
                 (self.state == robotState.stand_to_motion)or
                 (self.state == robotState.motion_to_stand)):
@@ -501,8 +501,8 @@ class BxiExample(Node):
             else:
                 raise Exception
 
-            # dof_pos_target[7] += ankle_y_offset
-            # dof_pos_target[13] += ankle_y_offset
+            dof_pos_target[7] += ankle_y_offset
+            dof_pos_target[13] += ankle_y_offset
 
             # 软限位
             # upper_limit = dof_pos + (torque_limit - dof_vel * joint_kd) / joint_kp

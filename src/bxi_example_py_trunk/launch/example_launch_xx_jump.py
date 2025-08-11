@@ -17,7 +17,8 @@ def generate_launch_description():
         "high_jump": "policy/0809_highjump.onnx",
         "far_jump": "policy/0805_farjump.onnx",
         # "dance": "policy/0805_dance.onnx",
-        "dance": "policy/0810_dance.onnx",
+        # "dance": "policy/0810_dance.onnx",
+        "dance": "policy/0811_dance.onnx",
         "walk_example": "policy/walk_example.onnx",
         "walk_example_height": "policy/walk_example_height.onnx",
     }
