@@ -43,8 +43,7 @@ robot_name = "elf25"
 dof_num = 25
 dof_use = 12
 
-ankle_y_offset = 0.1 # +向后倒 -向前倒
-# ankle_y_offset = 0.0
+ankle_y_offset = -0.0 # +向后倒 -向前倒
 
 joint_name = (
     "waist_y_joint",
@@ -532,6 +531,8 @@ class BxiExample(Node):
         msg.torque = np.zeros(dof_num, dtype=np.float32).tolist()
         msg.kp = joint_kp.tolist()
         msg.kd = joint_kd.tolist()
+        print("kp",joint_kp.tolist())
+        print("kd",joint_kd.tolist())
         self.act_pub.publish(msg)
 
     def robot_rest(self, reset_step, release):

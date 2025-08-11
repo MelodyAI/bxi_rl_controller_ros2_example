@@ -90,7 +90,7 @@ ros2 launch bxi_example_py_trunk example_launch_high_jump_hw.py
 # start
 sudo su
 source install/setup.bash
-export ROS_DOMAIN_ID=10
+export ROS_DOMAIN_ID=106
 ros2 launch remote_controller remote_conroller_launch.py
 ```
 
