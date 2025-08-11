@@ -21,6 +21,7 @@ class humanoid_mux_15dof_onnx_Agent(baseAgent):
         out1 = self.agent1.inference(main_agent_obs_group)
 
         out2 = self.agent2.inference(obs_group)
+        out2[3:15] = 0
 
         added_out = out2
         added_out[3:15] += out1

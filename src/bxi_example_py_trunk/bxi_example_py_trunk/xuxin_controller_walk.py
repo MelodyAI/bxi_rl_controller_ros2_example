@@ -244,7 +244,7 @@ class BxiExample(Node):
             joint_kp_send[index_isaac_in_mujoco_15] = joint_info_15.joint_kp
             joint_kd_send[index_isaac_in_mujoco_15] = joint_info_15.joint_kd
 
-            dof_pos_target[:3] = 0 # NOTE: 腰暂时不要输出
+            # dof_pos_target[:3] = 0 # NOTE: 腰暂时不要输出
 
             # # 缓启动 1秒内和初始位姿插值
             # blend = self.loop_count_step_2/(1.0/0.02)
