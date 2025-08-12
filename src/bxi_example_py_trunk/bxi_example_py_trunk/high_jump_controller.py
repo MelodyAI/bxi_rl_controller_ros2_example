@@ -15,6 +15,7 @@ import time
 import sys
 import math
 import json
+from copy import deepcopy
 from std_msgs.msg import Header,Float32MultiArray
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import JointState
@@ -177,6 +178,7 @@ class BxiExample(Node):
         self.timer = self.create_timer(self.loop_dt, self.timer_callback, callback_group=self.timer_callback_group_1)
 
         self.btn_10_prev = False
+        self.btn_5_prev = False
     
         self.target_yaw = 0
 
@@ -184,6 +186,7 @@ class BxiExample(Node):
         self.motion_to_stand_counter = None
         self.state = robotState.stand
         self.high_jump_btn_changed = False
+        self.stop_btn_changed = False
         self.motion_type = None
 
     def state_machine(self):
@@ -211,13 +214,21 @@ class BxiExample(Node):
                     print("state: motion [jump]")
 
         elif self.state==robotState.motion:
-            if self.high_jump_btn_changed:
-                self.high_jump_btn_changed = False
-
-                # 直接启动
-                self.high_jump_agent.reset()
-                self.high_jump_agent.motion_playing = True
-                print("state: motion [jump]")       
+            if self.motion_type == motionType.high_jump:
+                if self.high_jump_btn_changed:
+                    # 结束了之后不返回站立 连续跳
+                    self.high_jump_btn_changed = False
+                    self.high_jump_agent.reset()
+                    self.high_jump_agent.motion_playing = True
+                    print("state: motion [jump]")
+                if self.stop_btn_changed:
+                    self.stop_btn_changed = False
+                    self.state=robotState.motion_to_stand
+                    upper_body_current = self.qpos
+                    upper_body_target = joint_nominal_pos
+                    self.motion_to_stand_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
+                    self.walk_agent.reset()
+                    print("state: motion_to_stand")
 
         elif(self.state==robotState.motion_to_stand):
             self.motion_to_stand_counter.step()
@@ -305,19 +316,19 @@ class BxiExample(Node):
             }
             # dof_pos[7] -= ankle_y_offset
             # dof_pos[13] -= ankle_y_offset
-            if ((self.state == robotState.stand)or
-                (self.state == robotState.stand_to_motion)or
-                (self.state == robotState.motion_to_stand)):
-                obs_group["dof_pos"] = dof_pos[index_isaac_in_mujoco_12_example]
-                obs_group["dof_vel"] = dof_vel[index_isaac_in_mujoco_12_example]
-            elif self.state == robotState.motion:
-                obs_group["dof_pos"] = dof_pos[index_isaac_in_mujoco_23]
-                obs_group["dof_vel"] = dof_vel[index_isaac_in_mujoco_23]
-            else:
-                raise Exception
+            obs_group_12 = {
+                "dof_pos": dof_pos[index_isaac_in_mujoco_12_example],
+                "dof_vel": dof_vel[index_isaac_in_mujoco_12_example],
+                **obs_group,
+            }
+            obs_group_23 = {
+                "dof_pos": dof_pos[index_isaac_in_mujoco_23],
+                "dof_vel": dof_vel[index_isaac_in_mujoco_23],
+                **obs_group,
+            }
 
             if self.state == robotState.stand:
-                agent_out = self.walk_agent.inference(obs_group)
+                agent_out = self.walk_agent.inference(obs_group_12)
                 dof_pos_target = joint_nominal_pos.copy()
                 dof_pos_target[index_isaac_in_mujoco_12_example] = agent_out
                 joint_kp_send[index_isaac_in_mujoco_12_example] = joint_info_12_example.joint_kp
@@ -335,7 +346,7 @@ class BxiExample(Node):
                 joint_kd_send[index_isaac_in_mujoco_23_upper_body] = joint_info_23.joint_kd_upper_body
 
                 # 下半身仍然用走路的控制
-                agent_out = self.walk_agent.inference(obs_group)
+                agent_out = self.walk_agent.inference(obs_group_12)
                 dof_pos_target[index_isaac_in_mujoco_12_example] = agent_out
 
                 joint_kp_send[index_isaac_in_mujoco_12_example] = joint_info_12_example.joint_kp
@@ -345,7 +356,7 @@ class BxiExample(Node):
                 if (self.loop_count % 2 == 0): # jump agent是50hz
                     # print("jump inference")
                     if self.motion_type==motionType.high_jump:
-                        agent_out = self.high_jump_agent.inference(obs_group)
+                        agent_out = self.high_jump_agent.inference(obs_group_23)
 
                     dof_pos_target = joint_nominal_pos.copy()
                     dof_pos_target[index_isaac_in_mujoco_23] = agent_out
@@ -359,22 +370,41 @@ class BxiExample(Node):
                     joint_kd_send = self.joint_kd_send_last
 
             elif self.state == robotState.motion_to_stand:
+                if (self.loop_count % 2 == 0): # jump agent是50hz
+                    # print("jump inference")
+                    if self.motion_type==motionType.high_jump:
+                        agent_out = self.high_jump_agent.inference(obs_group_23)
+
+                    dof_pos_target = joint_nominal_pos.copy()
+                    dof_pos_target[index_isaac_in_mujoco_23] = agent_out
+                    joint_kp_send[index_isaac_in_mujoco_23] = joint_info_23.joint_kp
+                    joint_kd_send[index_isaac_in_mujoco_23] = joint_info_23.joint_kd
+                else:
+                    # 50hz空白的一帧发送上一帧相同指令
+                    # print("jump inference skip")
+                    dof_pos_target = self.dof_pos_target_last
+                    joint_kp_send = self.joint_kp_send_last
+                    joint_kd_send = self.joint_kd_send_last
+                dof_pos_target_jump = dof_pos_target.copy()
+                joint_kp_send_jump = joint_kp_send.copy()
+                joint_kd_send_jump = joint_kd_send.copy()
+
                 dof_pos_target = joint_nominal_pos.copy()
-                blend = max(self.motion_to_stand_counter.percent * 1.5 - 0.5, 0.)
-                print("motion_to_stand:", blend)
-
-                # 上半身插值
-                dof_pos_target[index_isaac_in_mujoco_23_upper_body] = self.motion_to_stand_counter.get_dof_pos_by_other_percent(blend)[index_isaac_in_mujoco_23_upper_body]
-
-                # 下半身仍然用走路的控制
-                agent_out = self.walk_agent.inference(obs_group)
-                blend2 = min(self.motion_to_stand_counter.percent * 4.0, 1.0) # 0.5s
-                # dof_pos_target[index_isaac_in_mujoco_12_example] = self.motion_to_stand_counter.dof_pos_start[index_isaac_in_mujoco_12_example] * (1-blend2) + agent_out * blend2
+                joint_kp_send = joint_kp.copy()
+                joint_kd_send = joint_kd.copy()
+                agent_out = self.walk_agent.inference(obs_group_12)
                 dof_pos_target[index_isaac_in_mujoco_12_example] = agent_out
-        
-                # joint_kp_send[index_isaac_in_mujoco_12_example] = np.array(joint_info_12_example.joint_kp, dtype=np.float32) * (0.5 + 0.5 * self.motion_to_stand_counter.percent)
                 joint_kp_send[index_isaac_in_mujoco_12_example] = joint_info_12_example.joint_kp
                 joint_kd_send[index_isaac_in_mujoco_12_example] = joint_info_12_example.joint_kd
+                dof_pos_target_walk = dof_pos_target.copy()
+                joint_kp_send_walk = joint_kp_send.copy()
+                joint_kd_send_walk = joint_kd_send.copy()
+
+                blend = self.motion_to_stand_counter.percent
+                dof_pos_target = dof_pos_target_jump * (1-blend) + dof_pos_target_walk * blend
+                joint_kp_send = joint_kp_send_jump * (1-blend) + joint_kp_send_walk * blend
+                joint_kd_send = joint_kd_send_jump * (1-blend) + joint_kd_send_walk * blend
+
             else:
                 raise Exception
 
@@ -471,12 +501,16 @@ class BxiExample(Node):
             self.stand_height = stand_height
 
             btn_10 = msg.btn_10 # Y
+            btn_5 = msg.btn_5 # B 
             if self.step < 2:
                 self.btn_10_prev = btn_10
+                self.btn_5_prev = btn_5
 
             self.high_jump_btn_changed = (btn_10 != self.btn_10_prev)
+            self.stop_btn_changed = (btn_5 != self.btn_5_prev)
 
             self.btn_10_prev = btn_10
+            self.btn_5_prev = btn_5
 
     def imu_callback(self, msg):
         quat = msg.orientation
