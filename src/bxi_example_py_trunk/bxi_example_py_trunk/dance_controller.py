@@ -15,6 +15,7 @@ import time
 import sys
 import math
 import json
+from copy import deepcopy
 from std_msgs.msg import Header,Float32MultiArray
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import JointState
@@ -308,19 +309,19 @@ class BxiExample(Node):
             }
             dof_pos[7] -= ankle_y_offset
             dof_pos[13] -= ankle_y_offset
-            if ((self.state == robotState.stand)or
-                (self.state == robotState.stand_to_motion)or
-                (self.state == robotState.motion_to_stand)):
-                obs_group["dof_pos"] = dof_pos[index_isaac_in_mujoco_12_example]
-                obs_group["dof_vel"] = dof_vel[index_isaac_in_mujoco_12_example]
-            elif self.state == robotState.motion:
-                obs_group["dof_pos"] = dof_pos[index_isaac_in_mujoco_23]
-                obs_group["dof_vel"] = dof_vel[index_isaac_in_mujoco_23]
-            else:
-                raise Exception
+            obs_group_12 = {
+                "dof_pos": dof_pos[index_isaac_in_mujoco_12_example],
+                "dof_vel": dof_vel[index_isaac_in_mujoco_12_example],
+                **obs_group,
+            }
+            obs_group_23 = {
+                "dof_pos": dof_pos[index_isaac_in_mujoco_23],
+                "dof_vel": dof_vel[index_isaac_in_mujoco_23],
+                **obs_group,
+            }
 
             if self.state == robotState.stand:
-                agent_out = self.walk_agent.inference(obs_group)
+                agent_out = self.walk_agent.inference(obs_group_12)
                 dof_pos_target = joint_nominal_pos.copy()
                 dof_pos_target[index_isaac_in_mujoco_12_example] = agent_out
                 joint_kp_send[index_isaac_in_mujoco_12_example] = joint_info_12_example.joint_kp
@@ -338,7 +339,7 @@ class BxiExample(Node):
                 joint_kd_send[index_isaac_in_mujoco_23_upper_body] = joint_info_23.joint_kd_upper_body
 
                 # 下半身仍然用走路的控制
-                agent_out = self.walk_agent.inference(obs_group)
+                agent_out = self.walk_agent.inference(obs_group_12)
                 dof_pos_target[index_isaac_in_mujoco_12_example] = agent_out
 
                 joint_kp_send[index_isaac_in_mujoco_12_example] = joint_info_12_example.joint_kp
@@ -348,7 +349,7 @@ class BxiExample(Node):
                 if (self.loop_count % 2 == 0): # jump agent是50hz
                     # print("jump inference")
                     if self.motion_type==motionType.dance:
-                        agent_out = self.dance_agent.inference(obs_group)
+                        agent_out = self.dance_agent.inference(obs_group_23)
 
                     dof_pos_target = joint_nominal_pos.copy()
                     dof_pos_target[index_isaac_in_mujoco_23] = agent_out
@@ -370,7 +371,7 @@ class BxiExample(Node):
                 dof_pos_target[index_isaac_in_mujoco_23_upper_body] = self.motion_to_stand_counter.get_dof_pos_by_other_percent(blend)[index_isaac_in_mujoco_23_upper_body]
 
                 # 下半身仍然用走路的控制
-                agent_out = self.walk_agent.inference(obs_group)
+                agent_out = self.walk_agent.inference(obs_group_12)
                 blend2 = min(self.motion_to_stand_counter.percent * 4.0, 1.0) # 0.5s
                 # dof_pos_target[index_isaac_in_mujoco_12_example] = self.motion_to_stand_counter.dof_pos_start[index_isaac_in_mujoco_12_example] * (1-blend2) + agent_out * blend2
                 dof_pos_target[index_isaac_in_mujoco_12_example] = agent_out
