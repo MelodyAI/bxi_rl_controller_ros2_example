@@ -96,7 +96,7 @@ class humanoid_motion_tracking_Agent(baseAgent):
         if motion_time_norm > self.motion_end:
             motion_time_norm = self.motion_end
             self.motion_playing =  False
-        print(f"motion percent:{motion_time_norm:.2f}")
+        print(f"motion percent:{motion_time_norm:.3f}")
         motion_time_norm = np.array([motion_time_norm])
 
         infer_dt = np.array([0.])

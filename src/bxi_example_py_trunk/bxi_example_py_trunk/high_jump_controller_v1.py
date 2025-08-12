@@ -164,7 +164,7 @@ class BxiExample(Node):
         motion_difficulty = 0.15 # [0.15, 0.35]
         motion_time_increment = motion_agent_dt * video_fps / video_buffer_length
         self.high_jump_agent=humanoid_motion_tracking_Agent(self.policy_file_dict["high_jump"],
-                                                            motion_time_increment, motion_difficulty, motion_range=[0.,0.65])
+                                                            motion_time_increment, motion_difficulty, motion_range=[0.3,0.65])
 
         self.vx = 0.
         self.vy = 0.
@@ -199,8 +199,6 @@ class BxiExample(Node):
                 upper_body_target = joint_info_23.high_jump_ref_pos_upper_body
                 self.stand_to_motion_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
                 self.motion_type = motionType.high_jump
-                self.high_jump_agent.reset()
-                self.high_jump_agent.motion_playing = False
                 print("state: stand_to_motion [high jump]")
             else:
                 pass
@@ -211,6 +209,7 @@ class BxiExample(Node):
                 self.state=robotState.motion
                 self.stand_to_motion_counter = None
                 if self.motion_type == motionType.high_jump:
+                    self.high_jump_agent.reset()
                     self.high_jump_agent.motion_playing = True
                     print("state: motion [jump]")
 
@@ -338,41 +337,21 @@ class BxiExample(Node):
 
             elif self.state == robotState.stand_to_motion:
                 # 进入跳跃状态后 先把手臂抬起来到启动位置
-                if (self.loop_count % 2 == 0): # jump agent是50hz
-                    # print("jump inference")
-                    if self.motion_type==motionType.high_jump:
-                        agent_out = self.high_jump_agent.inference(obs_group_23)
-
-                    dof_pos_target = joint_nominal_pos.copy()
-                    dof_pos_target[index_isaac_in_mujoco_23] = agent_out
-                    joint_kp_send[index_isaac_in_mujoco_23] = joint_info_23.joint_kp
-                    joint_kd_send[index_isaac_in_mujoco_23] = joint_info_23.joint_kd
-                else:
-                    # 50hz空白的一帧发送上一帧相同指令
-                    # print("jump inference skip")
-                    dof_pos_target = self.dof_pos_target_last
-                    joint_kp_send = self.joint_kp_send_last
-                    joint_kd_send = self.joint_kd_send_last
-                dof_pos_target_jump = dof_pos_target.copy()
-                joint_kp_send_jump = joint_kp_send.copy()
-                joint_kd_send_jump = joint_kd_send.copy()
-
                 dof_pos_target = joint_nominal_pos.copy()
-                joint_kp_send = joint_kp.copy()
-                joint_kd_send = joint_kd.copy()
+                blend = min(self.stand_to_motion_counter.percent * 1.5, 1.0) # 预留一些时间保持姿势
+                print("stand_to_motion:",blend)
+
+                # 上半身插值
+                dof_pos_target[index_isaac_in_mujoco_23_upper_body] = self.stand_to_motion_counter.get_dof_pos_by_other_percent(blend)
+                joint_kp_send[index_isaac_in_mujoco_23_upper_body] = joint_info_23.joint_kp_upper_body
+                joint_kd_send[index_isaac_in_mujoco_23_upper_body] = joint_info_23.joint_kd_upper_body
+
+                # 下半身仍然用走路的控制
                 agent_out = self.walk_agent.inference(obs_group_12)
                 dof_pos_target[index_isaac_in_mujoco_12_example] = agent_out
+
                 joint_kp_send[index_isaac_in_mujoco_12_example] = joint_info_12_example.joint_kp
                 joint_kd_send[index_isaac_in_mujoco_12_example] = joint_info_12_example.joint_kd
-                dof_pos_target_walk = dof_pos_target.copy()
-                joint_kp_send_walk = joint_kp_send.copy()
-                joint_kd_send_walk = joint_kd_send.copy()
-
-                blend = self.stand_to_motion_counter.percent
-                print("blend:",blend)
-                dof_pos_target = dof_pos_target_jump * blend + dof_pos_target_walk * (1-blend)
-                joint_kp_send = joint_kp_send_jump * blend + joint_kp_send_walk * (1-blend)
-                joint_kd_send = joint_kd_send_jump * blend + joint_kd_send_walk * (1-blend)
 
             elif self.state == robotState.motion:
                 if (self.loop_count % 2 == 0): # jump agent是50hz
