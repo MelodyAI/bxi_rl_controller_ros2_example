@@ -8,19 +8,8 @@ import json
 
 def generate_launch_description():
 
-    xml_file_name = "model/xml/elf2-ankle/elf2_ankle_dof25.xml"
-    xml_file = os.path.join(get_package_share_path("description"), xml_file_name)
-
     policy_file_dict = {
-        # "high_jump": "policy/0805_highjump.onnx",
-        # "high_jump": "policy/0807_highjump.onnx",
-        "high_jump": "policy/0809_highjump.onnx",
-        # "far_jump": "policy/0805_farjump.onnx",
         "far_jump": "policy/0805_farjump_v2.onnx",
-        # "dance": "policy/0805_dance.onnx",
-        # "dance": "policy/0810_dance.onnx",
-        "dance": "policy/0811_dance.onnx",
-        "walk_example": "policy/walk_example.onnx",
         "walk_example_height": "policy/walk_example_height.onnx",
     }
     for key, value in policy_file_dict.items():
@@ -29,12 +18,11 @@ def generate_launch_description():
     return LaunchDescription(
         [
             Node(
-                package="mujoco",
-                executable="simulation",
-                name="simulation_mujoco",
+                package="hardware_ankle",
+                executable="hardware_ankle",
+                name="hardware_ankle",
                 output="screen",
                 parameters=[
-                    {"simulation/model_file": xml_file},
                 ],
                 emulate_tty=True,
                 arguments=[("__log_level:=debug")],
@@ -42,11 +30,11 @@ def generate_launch_description():
 
             Node(
                 package="bxi_example_py_trunk",
-                executable="xuxin_controller_terrain",
-                name="xuxin_controller_terrain",
+                executable="far_jump_controller",
+                name="far_jump_controller",
                 output="screen",
                 parameters=[
-                    {"/topic_prefix": "simulation/"},
+                    {"/topic_prefix": "hardware/"},
                     {"/policy_file_dict": json.dumps(policy_file_dict)},
                 ],
                 emulate_tty=True,

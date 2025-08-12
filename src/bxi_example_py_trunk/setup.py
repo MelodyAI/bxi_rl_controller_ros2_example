@@ -43,6 +43,8 @@ setup(
         ('share/' + package_name + '/launch', ['launch/example_launch_xx_walk_hw.py']),
         ('share/' + package_name + '/launch', ['launch/example_launch_high_jump.py']),
         ('share/' + package_name + '/launch', ['launch/example_launch_high_jump_hw.py']),
+        ('share/' + package_name + '/launch', ['launch/example_launch_far_jump.py']),
+        ('share/' + package_name + '/launch', ['launch/example_launch_far_jump_hw.py']),
         ('share/' + package_name + '/launch', ['launch/example_launch_dance.py']),
         ('share/' + package_name + '/launch', ['launch/example_launch_dance_hw.py']),
         # ('share/' + package_name + '/launch', ['launch/example_launch_hw_slope.py']),
@@ -61,6 +63,7 @@ setup(
             'xuxin_controller_terrain = bxi_example_py_trunk.xuxin_controller_terrain:main',
             'xuxin_controller_walk = bxi_example_py_trunk.xuxin_controller_walk:main', # blind walk
             'high_jump_controller = bxi_example_py_trunk.high_jump_controller:main',
+            'far_jump_controller = bxi_example_py_trunk.far_jump_controller:main',
             'dance_controller = bxi_example_py_trunk.dance_controller:main',
         ],
     },

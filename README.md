@@ -80,14 +80,19 @@ ros2 launch bxi_example_py_trunk example_launch_xx.py
 ros2 launch bxi_example_py_trunk example_launch_xx_terrain.py
 ros2 launch bxi_example_py_trunk example_launch_xx_walk.py
 ros2 launch bxi_example_py_trunk example_launch_xx_jump.py
+
 ros2 launch bxi_example_py_trunk example_launch_high_jump.py
+ros2 launch bxi_example_py_trunk example_launch_far_jump.py
 ros2 launch bxi_example_py_trunk example_launch_dance.py
 
 # hardware
 ros2 launch bxi_example_py_trunk example_launch_xx_terrain_hw.py
 ros2 launch bxi_example_py_trunk example_launch_xx_walk_hw.py
 ros2 launch bxi_example_py_trunk example_launch_xx_jump_hw.py
+
 ros2 launch bxi_example_py_trunk example_launch_high_jump_hw.py
+ros2 launch bxi_example_py_trunk example_launch_far_jump_hw.py
+ros2 launch bxi_example_py_trunk example_launch_dance_hw.py
 
 # start
 sudo su
