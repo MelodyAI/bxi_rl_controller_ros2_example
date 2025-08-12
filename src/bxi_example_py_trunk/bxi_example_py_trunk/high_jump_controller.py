@@ -34,8 +34,7 @@ robot_name = "elf25"
 dof_num = 25
 dof_use = 12
 
-# ankle_y_offset = 0.04
-ankle_y_offset = 0.0
+ankle_y_offset = -0.0 # +向后倒 -向前倒
 
 joint_name = (
     "waist_y_joint",
@@ -177,7 +176,6 @@ class BxiExample(Node):
         self.loop_dt = 0.01  # loop @100Hz
         self.timer = self.create_timer(self.loop_dt, self.timer_callback, callback_group=self.timer_callback_group_1)
 
-        # obstacle play
         self.btn_10_prev = False
     
         self.target_yaw = 0

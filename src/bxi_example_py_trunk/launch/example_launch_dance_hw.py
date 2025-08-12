@@ -9,7 +9,7 @@ import json
 def generate_launch_description():
 
     policy_file_dict = {
-        "high_jump": "policy/0809_highjump.onnx",
+        "dance": "policy/0811_dance.onnx",
         "walk_example_height": "policy/walk_example_height.onnx",
     }
     for key, value in policy_file_dict.items():
@@ -30,8 +30,8 @@ def generate_launch_description():
 
             Node(
                 package="bxi_example_py_trunk",
-                executable="high_jump_controller",
-                name="high_jump_controller",
+                executable="dance_controller",
+                name="dance_controller",
                 output="screen",
                 parameters=[
                     {"/topic_prefix": "hardware/"},
