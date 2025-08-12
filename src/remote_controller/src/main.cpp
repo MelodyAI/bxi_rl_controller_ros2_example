@@ -108,10 +108,10 @@ private:
     int mode = 0;
     bool left_arm_toggle = false;   // 左手挥舞切换状态
     bool right_arm_toggle = false;  // 右手握手切换状态
-    bool high_jump_toggle = false;  // 跳高/发送障碍高程图
-    bool far_jump_toggle = false;  // 立定跳远
-    bool dance_toggle = false;  // 舞蹈
-
+    bool high_jump_toggle = false;  // 跳高/发送障碍高程图(Y)
+    bool far_jump_toggle = false;  // 立定跳远(X)
+    bool stop_btn_toggle = false;  // B
+    bool dance_toggle = false;  // 舞蹈(A)
     double vel_offset = 0.0;
 
     void timer_callback(){
@@ -162,6 +162,7 @@ private:
             message.btn_8 = dance_toggle ? 1 : 0; // A
             message.btn_9 = far_jump_toggle ? 1 : 0; // X
             message.btn_10 = high_jump_toggle ? 1 : 0; // Y
+            message.btn_5 = stop_btn_toggle ? 1 : 0; // B
 
             message.btn_6 = left_arm_toggle ? 1 : 0;    // BT6控制左手挥舞
             message.btn_7 = right_arm_toggle ? 1 : 0;   // BT7控制右手握手
@@ -231,6 +232,7 @@ private:
                             {
                                 stand_height = STAND_HEIGHT_MAX;
                             }
+                            stop_btn_toggle = !stop_btn_toggle;
                             printf("stand_height: %f\n", stand_height);
                         }
                         break;

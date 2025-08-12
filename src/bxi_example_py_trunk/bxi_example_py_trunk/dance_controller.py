@@ -176,6 +176,7 @@ class BxiExample(Node):
         self.timer = self.create_timer(self.loop_dt, self.timer_callback, callback_group=self.timer_callback_group_1)
 
         self.btn_8_prev = False
+        self.btn_5_prev = False
     
         self.target_yaw = 0
 
@@ -183,6 +184,7 @@ class BxiExample(Node):
         self.motion_to_stand_counter = None
         self.state = robotState.stand
         self.dance_btn_changed = False
+        self.stop_btn_changed = False
         self.motion_type = None
 
     def state_machine(self):
@@ -210,13 +212,15 @@ class BxiExample(Node):
                     print("state: motion [dance]")
 
         elif self.state==robotState.motion:
-            if self.motion_type == motionType.dance and (not self.dance_agent.motion_playing):
-                self.state=robotState.motion_to_stand
-                upper_body_current = self.qpos
-                upper_body_target = joint_nominal_pos
-                self.motion_to_stand_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
-                self.walk_agent.reset()
-                print("state: motion_to_stand")
+            if self.motion_type == motionType.dance:
+                if (not self.dance_agent.motion_playing) or self.stop_btn_changed:
+                    self.stop_btn_changed = False
+                    self.state=robotState.motion_to_stand
+                    upper_body_current = self.qpos
+                    upper_body_target = joint_nominal_pos
+                    self.motion_to_stand_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
+                    self.walk_agent.reset()
+                    print("state: motion_to_stand")
 
         elif(self.state==robotState.motion_to_stand):
             self.motion_to_stand_counter.step()
@@ -467,12 +471,16 @@ class BxiExample(Node):
             self.stand_height = min(msg.height_des, 3.0)
 
             btn_8 = msg.btn_8 # A
+            btn_5 = msg.btn_5 # B 
             if self.step < 2:
                 self.btn_8_prev = btn_8
+                self.btn_5_prev = btn_5
 
             self.dance_btn_changed = (btn_8 != self.btn_8_prev)
+            self.stop_btn_changed = (btn_5 != self.btn_5_prev)
 
             self.btn_8_prev = btn_8
+            self.btn_5_prev = btn_5
 
     def imu_callback(self, msg):
         quat = msg.orientation
