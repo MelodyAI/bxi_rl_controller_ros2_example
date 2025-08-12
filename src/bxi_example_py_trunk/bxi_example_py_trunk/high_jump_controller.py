@@ -177,8 +177,8 @@ class BxiExample(Node):
         self.loop_dt = 0.01  # loop @100Hz
         self.timer = self.create_timer(self.loop_dt, self.timer_callback, callback_group=self.timer_callback_group_1)
 
-        self.btn_10_prev = False
-        self.btn_5_prev = False
+        self.high_jump_btn_prev = False
+        self.stop_btn_prev = False
     
         self.target_yaw = 0
 
@@ -500,17 +500,17 @@ class BxiExample(Node):
             stand_height = max(stand_height, 1.0)
             self.stand_height = stand_height
 
-            btn_10 = msg.btn_10 # Y
-            btn_5 = msg.btn_5 # B 
+            high_jump_btn = msg.btn_7 # Y
+            stop_btn = msg.btn_10 # B 
             if self.step < 2:
-                self.btn_10_prev = btn_10
-                self.btn_5_prev = btn_5
+                self.high_jump_btn_prev = high_jump_btn
+                self.stop_btn_prev = stop_btn
 
-            self.high_jump_btn_changed = (btn_10 != self.btn_10_prev)
-            self.stop_btn_changed = (btn_5 != self.btn_5_prev)
+            self.high_jump_btn_changed = (high_jump_btn != self.high_jump_btn_prev)
+            self.stop_btn_changed = (stop_btn != self.stop_btn_prev)
 
-            self.btn_10_prev = btn_10
-            self.btn_5_prev = btn_5
+            self.high_jump_btn_prev = high_jump_btn
+            self.stop_btn_prev = stop_btn
 
     def imu_callback(self, msg):
         quat = msg.orientation

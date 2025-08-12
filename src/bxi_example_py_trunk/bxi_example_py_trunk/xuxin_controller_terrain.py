@@ -207,9 +207,10 @@ class BxiExample(Node):
         self.total_play_count = total_play_time/self.loop_dt
         self.obstacle_height = 0.3
         self.play_count = self.total_play_count + 999
-        self.btn_8_prev = False
-        self.btn_9_prev = False
-        self.btn_10_prev = False
+        self.dance_btn_prev = False
+        self.far_jump_btn_prev = False
+        self.high_jump_btn_prev = False
+        self.stop_btn_prev = False
     
         self.target_yaw = 0
 
@@ -221,6 +222,7 @@ class BxiExample(Node):
         self.dance_btn_changed = False
         self.far_jump_btn_changed = False
         self.high_jump_btn_changed = False
+        self.stop_btn_changed = False
         self.motion_type = None
 
     def obstacle_play_command_callback(self):
@@ -591,21 +593,25 @@ class BxiExample(Node):
             self.dyaw = msg.yawdot_des
             self.stand_height = min(msg.height_des, 3.0)
 
-            btn_8 = msg.btn_8 # A
-            # btn_9 = msg.btn_9 # X
-            btn_10 = msg.btn_10 # Y
+            dance_btn = msg.btn_5 # A
+            far_jump_btn = msg.btn_6 # X
+            high_jump_btn = msg.btn_7 # Y
+            stop_btn = msg.btn_10 # Y
             if self.step < 2:
-                self.btn_8_prev = btn_8
-                # self.btn_9_prev = btn_9
-                self.btn_10_prev = btn_10
+                self.dance_btn_prev = dance_btn
+                self.far_jump_btn_prev = far_jump_btn
+                self.high_jump_btn_prev = high_jump_btn
+                self.stop_btn_prev = stop_btn
 
-            self.dance_btn_changed = (btn_8 != self.btn_8_prev)
-            # self.far_jump_btn_changed = (btn_9 != self.btn_9_prev)
-            self.high_jump_btn_changed = (btn_10 != self.btn_10_prev)
+            self.dance_btn_changed = (dance_btn != self.dance_btn_prev)
+            self.far_jump_btn_changed = (far_jump_btn != self.far_jump_btn_prev)
+            self.high_jump_btn_changed = (high_jump_btn != self.high_jump_btn_prev)
+            self.stop_btn_changed = (stop_btn != self.stop_btn_prev)
 
-            self.btn_8_prev = btn_8
-            # self.btn_9_prev = btn_9
-            self.btn_10_prev = btn_10
+            self.dance_btn_prev = dance_btn
+            self.far_jump_btn_prev = far_jump_btn
+            self.high_jump_btn_prev = high_jump_btn
+            self.stop_btn_prev = stop_btn
 
     def imu_callback(self, msg):
         quat = msg.orientation

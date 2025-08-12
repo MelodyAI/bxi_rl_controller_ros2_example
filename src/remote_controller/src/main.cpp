@@ -31,15 +31,14 @@ using namespace std;
 #define JS_VELY_AXIS_DIR -1
 #define JS_VELR_AXIS 6
 #define JS_VELR_AXIS_DIR -1
-
 #define JS_STOP_BT 11
-#define JS_GAIT_STAND_BT 0
-#define JS_GAIT_WALK_BT 4
-#define JS_HEIGHT_UPPER_BT  1
-#define JS_HEIGHT_LOWER_BT  3
-#define JS_LEFT_ARM_BT      6
-#define JS_MODE_BT          7
 #define JS_START_BT 13
+#define JS_SHOULDER_LEFT_BT  6
+#define JS_SHOULDER_RIGHT_BT  7
+#define JS_Y_BT 4
+#define JS_X_BT 3
+#define JS_A_BT 0
+#define JS_B_BT 1
 #endif
 
 #define AXIS_DEAD_ZONE  1000
@@ -105,14 +104,12 @@ private:
     double height_filt = STAND_HEIGHT;
     double velr = 0;    //旋转速度
     double velr_filt = 0;
-    int mode = 0;
-    bool left_arm_toggle = false;   // 左手挥舞切换状态
-    bool right_arm_toggle = false;  // 右手握手切换状态
+    double vel_offset = 0.0;
+
     bool high_jump_toggle = false;  // 跳高/发送障碍高程图(Y)
     bool far_jump_toggle = false;  // 立定跳远(X)
     bool stop_btn_toggle = false;  // B
     bool dance_toggle = false;  // 舞蹈(A)
-    double vel_offset = 0.0;
 
     void timer_callback(){
         auto message = communication::msg::MotionCommands();{
@@ -156,16 +153,12 @@ private:
             message.vel_des.x = velxy_filt[0] + vel_offset;
             message.vel_des.y = velxy_filt[1];
             message.yawdot_des = velr_filt;
-            message.mode = mode;
 
             // 设置手臂控制标志
-            message.btn_8 = dance_toggle ? 1 : 0; // A
-            message.btn_9 = far_jump_toggle ? 1 : 0; // X
-            message.btn_10 = high_jump_toggle ? 1 : 0; // Y
-            message.btn_5 = stop_btn_toggle ? 1 : 0; // B
-
-            message.btn_6 = left_arm_toggle ? 1 : 0;    // BT6控制左手挥舞
-            message.btn_7 = right_arm_toggle ? 1 : 0;   // BT7控制右手握手
+            message.btn_5 = dance_toggle ? 1 : 0; // A
+            message.btn_6 = far_jump_toggle ? 1 : 0; // X
+            message.btn_7 = high_jump_toggle ? 1 : 0; // Y
+            message.btn_10 = stop_btn_toggle ? 1 : 0; // B
 
             height_filt = height_filt * 0.9 + stand_height * 0.1;
             message.height_des = height_filt;
@@ -225,52 +218,48 @@ private:
                             reset_value();
                         }
                         break;
-                        case JS_HEIGHT_UPPER_BT:{
+                        case JS_SHOULDER_LEFT_BT:{
                             const std::lock_guard<std::mutex> guard(lock_);
-                            stand_height += 0.2;
+                            stand_height -= 0.2;
                             if (stand_height > STAND_HEIGHT_MAX)
                             {
                                 stand_height = STAND_HEIGHT_MAX;
                             }
-                            stop_btn_toggle = !stop_btn_toggle;
                             printf("stand_height: %f\n", stand_height);
                         }
                         break;
-                        case JS_HEIGHT_LOWER_BT:{
+                        case JS_SHOULDER_RIGHT_BT:{
                             const std::lock_guard<std::mutex> guard(lock_);
-                            stand_height -= 0.2;
+                            stand_height += 0.2;
                             if (stand_height < STAND_HEIGHT_MIN)
                             {
                                 stand_height = STAND_HEIGHT_MIN;
                             }
-                            far_jump_toggle = !far_jump_toggle;
                             printf("stand_height: %f\n", stand_height);
                         }
                         break;
-                        case JS_GAIT_STAND_BT:{
+                        case JS_A_BT:{
                             const std::lock_guard<std::mutex> guard(lock_);
-                            vel_offset = 0.0;
                             dance_toggle = !dance_toggle;
-                            printf("change to stand\n");
+                            printf("toggle far jump");
                         }
                         break;
-                        case JS_GAIT_WALK_BT:{
+                        case JS_X_BT:{
                             const std::lock_guard<std::mutex> guard(lock_);
-                            vel_offset = 0.0011;
+                            far_jump_toggle = !far_jump_toggle;
+                            printf("toggle far jump");
+                        }
+                        break;
+                        case JS_Y_BT:{
+                            const std::lock_guard<std::mutex> guard(lock_);
                             high_jump_toggle = !high_jump_toggle;
-                            printf("change to walk\n");
+                            printf("toggle far jump");
                         }
                         break;
-                        case JS_LEFT_ARM_BT:{
+                        case JS_B_BT:{
                             const std::lock_guard<std::mutex> guard(lock_);
-                            left_arm_toggle = !left_arm_toggle;
-                            printf("Left arm waving toggle: %s\n", left_arm_toggle ? "ON" : "OFF");
-                        }
-                        break;
-                        case JS_MODE_BT:{
-                            const std::lock_guard<std::mutex> guard(lock_);
-                            right_arm_toggle = !right_arm_toggle;
-                            printf("Right arm handshake toggle: %s\n", right_arm_toggle ? "ON" : "OFF");
+                            stop_btn_toggle = !stop_btn_toggle;
+                            printf("toggle far jump");
                         }
                         break;
                         default:
