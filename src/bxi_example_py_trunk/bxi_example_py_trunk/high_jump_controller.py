@@ -465,7 +465,10 @@ class BxiExample(Node):
             self.vx = msg.vel_des.x
             self.vy = msg.vel_des.y
             self.dyaw = msg.yawdot_des
-            self.stand_height = min(msg.height_des, 3.0)
+            stand_height = msg.height_des
+            stand_height = min(stand_height, 3.0)
+            stand_height = max(stand_height, 1.0)
+            self.stand_height = stand_height
 
             btn_10 = msg.btn_10 # Y
             if self.step < 2:
