@@ -41,6 +41,8 @@ setup(
         ('share/' + package_name + '/launch', ['launch/example_launch_xx_jump_hw.py']),
         ('share/' + package_name + '/launch', ['launch/example_launch_xx_walk.py']),
         ('share/' + package_name + '/launch', ['launch/example_launch_xx_walk_hw.py']),
+        ('share/' + package_name + '/launch', ['launch/example_launch_mix3motion.py']),
+        ('share/' + package_name + '/launch', ['launch/example_launch_mix3motion_hw.py']),
         ('share/' + package_name + '/launch', ['launch/example_launch_high_jump.py']),
         ('share/' + package_name + '/launch', ['launch/example_launch_high_jump_hw.py']),
         ('share/' + package_name + '/launch', ['launch/example_launch_far_jump.py']),
@@ -62,6 +64,7 @@ setup(
             'xuxin_controller = bxi_example_py_trunk.xuxin_controller:main',
             'xuxin_controller_terrain = bxi_example_py_trunk.xuxin_controller_terrain:main',
             'xuxin_controller_walk = bxi_example_py_trunk.xuxin_controller_walk:main', # blind walk
+            'xuxin_controller_mix3motion = bxi_example_py_trunk.xuxin_controller_mix3motion:main',
             'high_jump_controller = bxi_example_py_trunk.high_jump_controller:main',
             'far_jump_controller = bxi_example_py_trunk.far_jump_controller:main',
             'dance_controller = bxi_example_py_trunk.dance_controller:main',
