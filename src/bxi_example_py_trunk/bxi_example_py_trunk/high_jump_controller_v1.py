@@ -178,15 +178,15 @@ class BxiExample(Node):
         self.timer = self.create_timer(self.loop_dt, self.timer_callback, callback_group=self.timer_callback_group_1)
 
         self.high_jump_btn_prev = False
+        self.high_jump_btn_changed = False
         self.stop_btn_prev = False
-    
+        self.stop_btn_changed = False
+
         self.target_yaw = 0
 
         self.stand_to_motion_counter = None
         self.motion_to_stand_counter = None
         self.state = robotState.stand
-        self.high_jump_btn_changed = False
-        self.stop_btn_changed = False
         self.motion_type = None
 
     def state_machine(self):
@@ -200,8 +200,6 @@ class BxiExample(Node):
                 self.stand_to_motion_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
                 self.motion_type = motionType.high_jump
                 print("state: stand_to_motion [high jump]")
-            else:
-                pass
             
         elif self.state==robotState.stand_to_motion:
             self.stand_to_motion_counter.step()
@@ -211,7 +209,7 @@ class BxiExample(Node):
                 if self.motion_type == motionType.high_jump:
                     self.high_jump_agent.reset()
                     self.high_jump_agent.motion_playing = True
-                    print("state: motion [jump]")
+                    print("state: motion [high jump]")
 
         elif self.state==robotState.motion:
             if self.motion_type == motionType.high_jump:
@@ -223,6 +221,7 @@ class BxiExample(Node):
                     self.high_jump_agent.motion_playing = True
                     print("state: motion [jump]")
                 if self.stop_btn_changed:
+                    # 手动退出
                     self.stop_btn_changed = False
                     self.state=robotState.motion_to_stand
                     upper_body_current = self.qpos
@@ -315,8 +314,8 @@ class BxiExample(Node):
                 "yaw_delta":np.array([yaw_delta,yaw_delta]),
                 "stand_height":np.array([self.stand_height]),
             }
-            # dof_pos[7] -= ankle_y_offset
-            # dof_pos[13] -= ankle_y_offset
+            dof_pos[7] -= ankle_y_offset
+            dof_pos[13] -= ankle_y_offset
             obs_group_12 = {
                 "dof_pos": dof_pos[index_isaac_in_mujoco_12_example],
                 "dof_vel": dof_vel[index_isaac_in_mujoco_12_example],
@@ -410,8 +409,8 @@ class BxiExample(Node):
             else:
                 raise Exception
 
-            # dof_pos_target[7] += ankle_y_offset
-            # dof_pos_target[13] += ankle_y_offset
+            dof_pos_target[7] += ankle_y_offset
+            dof_pos_target[13] += ankle_y_offset
 
             # 软限位
             # upper_limit = dof_pos + (torque_limit - dof_vel * joint_kd) / joint_kp

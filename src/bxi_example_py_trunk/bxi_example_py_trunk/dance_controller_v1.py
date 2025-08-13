@@ -23,7 +23,7 @@ from bxi_example_py_trunk.inference.humanoid_walk_stand_height import humanoid_w
 from bxi_example_py_trunk.inference.humanoid_dance import humanoid_dance_Agent
 
 from bxi_example_py_trunk.utils.legged_math import quat_rotate_inverse,quaternion_to_euler_array
-from bxi_example_py_trunk.utils.counter import Counter, recoverCounter
+from bxi_example_py_trunk.utils.counter import recoverCounter
 
 import bxi_example_py_trunk.joint_info.trunk_12dof as joint_info_12
 import bxi_example_py_trunk.joint_info.trunk_12dof_example as joint_info_12_example
@@ -177,15 +177,15 @@ class BxiExample(Node):
         self.timer = self.create_timer(self.loop_dt, self.timer_callback, callback_group=self.timer_callback_group_1)
 
         self.dance_btn_prev = False
+        self.dance_btn_changed = False
         self.stop_btn_prev = False
-    
+        self.stop_btn_changed = False
+
         self.target_yaw = 0
 
         self.stand_to_motion_counter = None
         self.motion_to_stand_counter = None
         self.state = robotState.stand
-        self.dance_btn_changed = False
-        self.stop_btn_changed = False
         self.motion_type = None
 
     def state_machine(self):
@@ -199,8 +199,6 @@ class BxiExample(Node):
                 self.stand_to_motion_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
                 self.motion_type = motionType.dance
                 print("state: stand_to_motion [dance]")
-            else:
-                pass
             
         elif self.state==robotState.stand_to_motion:
             self.stand_to_motion_counter.step()

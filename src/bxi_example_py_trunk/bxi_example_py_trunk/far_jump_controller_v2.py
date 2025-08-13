@@ -24,7 +24,7 @@ from bxi_example_py_trunk.inference.humanoid_motion_tracking import humanoid_mot
 from bxi_example_py_trunk.inference.humanoid_far_jump import humanoid_far_jump_Agent
 
 from bxi_example_py_trunk.utils.legged_math import quat_rotate_inverse,quaternion_to_euler_array
-from bxi_example_py_trunk.utils.counter import Counter, recoverCounter
+from bxi_example_py_trunk.utils.counter import recoverCounter
 
 import bxi_example_py_trunk.joint_info.trunk_12dof as joint_info_12
 import bxi_example_py_trunk.joint_info.trunk_12dof_example as joint_info_12_example
@@ -158,13 +158,12 @@ class BxiExample(Node):
         
         motion_agent_dt = 0.02
         video_fps = 30
-
         # 跳远
         video_buffer_length = 165
         motion_difficulty = 0.45 # [0.15, 0.65]
         motion_time_increment = motion_agent_dt * video_fps / video_buffer_length
         self.far_jump_agent=humanoid_motion_tracking_Agent(self.policy_file_dict["far_jump"],
-                                                            motion_time_increment, motion_difficulty, motion_range=[0., 0.66])
+                                                            motion_time_increment, motion_difficulty, motion_range=[0.,0.66])
 
         self.vx = 0.
         self.vy = 0.
@@ -178,15 +177,15 @@ class BxiExample(Node):
         self.timer = self.create_timer(self.loop_dt, self.timer_callback, callback_group=self.timer_callback_group_1)
 
         self.far_jump_btn_prev = False
+        self.far_jump_btn_changed = False
         self.stop_btn_prev = False
-    
+        self.stop_btn_changed = False
+
         self.target_yaw = 0
 
         self.stand_to_motion_counter = None
         self.motion_to_stand_counter = None
         self.state = robotState.stand
-        self.far_jump_btn_changed = False
-        self.stop_btn_changed = False
         self.motion_type = None
 
     def state_machine(self):
@@ -202,8 +201,6 @@ class BxiExample(Node):
                 self.far_jump_agent.reset()
                 self.far_jump_agent.motion_playing = False
                 print("state: stand_to_motion [far jump]")
-            else:
-                pass
             
         elif self.state==robotState.stand_to_motion:
             self.stand_to_motion_counter.step()
@@ -211,7 +208,6 @@ class BxiExample(Node):
                 self.state=robotState.motion
                 self.stand_to_motion_counter = None
                 if self.motion_type == motionType.far_jump:
-                    # self.far_jump_agent.reset()
                     self.far_jump_agent.last_actions_buf[:] = 0
                     self.far_jump_agent.motion_playing = True
                     print("state: motion [far jump]")
