@@ -59,7 +59,7 @@ class humanoid_dh_long_onnx_Agent(baseAgent):
         }
         self.action_scale = 1.0
         self.clip_observation = 100.
-        self.clip_action = 100.
+        self.clip_action = 3.
 
         self.prop_obs_history = np.zeros((self.num_prop_obs_input,self.long_history))
         self.estimator_obs_history = np.zeros((self.num_estimator_input,self.include_history_steps))
@@ -175,7 +175,7 @@ class humanoid_dh_long_onnx_Agent(baseAgent):
             "estimator_obs": estimator_obs_history.flatten()[None,:].astype(np.float32),
         }
         actions = np.squeeze(self.onnx_session.run(["output"], input_feed)) # test
-        # actions = np.clip(actions, -self.clip_action, self.clip_action) # tanh do not need clip
+        actions = np.clip(actions, -self.clip_action, self.clip_action)
 
         self.last_actions_buf[:] = actions
 
@@ -183,6 +183,7 @@ class humanoid_dh_long_onnx_Agent(baseAgent):
 
         # dof_pos_target_urdf = self.exp_filter.filter(dof_pos_target_urdf)
         self.inference_count += 1
+        dof_pos_target_urdf = dof_pos_target_urdf.clip(self.dof_pos_limits[:,0],self.dof_pos_limits[:,1])
         return dof_pos_target_urdf
     
     def reset(self):

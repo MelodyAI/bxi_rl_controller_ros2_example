@@ -13,7 +13,7 @@ def generate_launch_description():
 
     policy_file_dict = {
         # "walk_main": "policy/Aug07_12-29-51_model_522500.onnx",
-        "walk_main": "policy/Aug14_18-14-49_model_258000.onnx",
+        "walk_main": "policy/Aug14_18-14-49_model_450000.onnx",
         # "walk_comp": "policy/Aug07_12-29-51_model_522500_compensate.onnx",
         # "walk_comp": "policy/Aug07_12-29-51_model_522500_compensate_damping0d1.onnx",
     }
