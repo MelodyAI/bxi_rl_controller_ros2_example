@@ -18,9 +18,11 @@ import json
 from std_msgs.msg import Header,Float32MultiArray
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import JointState
-from bxi_example_py_trunk.inference.humanoid_mux_15dof_onnx import humanoid_mux_15dof_onnx_Agent
+from bxi_example_py_trunk.inference.humanoid_dh_long_onnx import humanoid_dh_long_onnx_Agent
+# from bxi_example_py_trunk.inference.humanoid_mux_15dof_onnx import humanoid_mux_15dof_onnx_Agent
 from bxi_example_py_trunk.utils.legged_math import quat_rotate_inverse,quaternion_to_euler_array
-import bxi_example_py_trunk.joint_info.trunk_15dof as joint_info_15
+# import bxi_example_py_trunk.joint_info.trunk_15dof as joint_info
+import bxi_example_py_trunk.joint_info.trunk_12dof as joint_info
 
 robot_name = "elf25"
 
@@ -92,7 +94,7 @@ torque_limit = np.array([
     27,27,7,27,7,
 ])
 
-index_isaac_in_mujoco_15 = [joint_name.index(name) for name in joint_info_15.joint_names]
+index_isaac_in_mujoco = [joint_name.index(name) for name in joint_info.joint_names]
 
 class robotState:
     stand = 1
@@ -142,9 +144,9 @@ class BxiExample(Node):
         self.omega = np.zeros(3,dtype=np.double)
         self.quat = np.zeros(4,dtype=np.double)
         
-        # self.walk_agent = humanoid_walk_onnx_Agent(self.policy_file_dict["walk_example"])
+        self.walk_agent = humanoid_dh_long_onnx_Agent(self.policy_file_dict["walk_main"])
         # self.walk_agent = humanoid_walk_stand_height_onnx_Agent(self.policy_file_dict["walk_example_height"])
-        self.walk_agent = humanoid_mux_15dof_onnx_Agent(self.policy_file_dict["walk_main"],self.policy_file_dict["walk_comp"],)
+        # self.walk_agent = humanoid_mux_15dof_onnx_Agent(self.policy_file_dict["walk_main"],self.policy_file_dict["walk_comp"],)
         
         self.vx = 0.
         self.vy = 0.
@@ -230,8 +232,8 @@ class BxiExample(Node):
             if y_vel_cmd<-0.2:y_vel_cmd=-0.2
 
             obs_group={
-                "dof_pos":dof_pos[index_isaac_in_mujoco_15],
-                "dof_vel":dof_vel[index_isaac_in_mujoco_15],
+                "dof_pos":dof_pos[index_isaac_in_mujoco],
+                "dof_vel":dof_vel[index_isaac_in_mujoco],
                 "angular_velocity":base_ang_vel,
                 "commands":np.array([x_vel_cmd, y_vel_cmd, yaw_vel_cmd]),
                 "projected_gravity":projected_gravity_vec,
@@ -240,9 +242,9 @@ class BxiExample(Node):
             }
             agent_out = self.walk_agent.inference(obs_group)
             dof_pos_target = joint_nominal_pos.copy()
-            dof_pos_target[index_isaac_in_mujoco_15] = agent_out
-            joint_kp_send[index_isaac_in_mujoco_15] = joint_info_15.joint_kp
-            joint_kd_send[index_isaac_in_mujoco_15] = joint_info_15.joint_kd
+            dof_pos_target[index_isaac_in_mujoco] = agent_out
+            joint_kp_send[index_isaac_in_mujoco] = joint_info.joint_kp
+            joint_kd_send[index_isaac_in_mujoco] = joint_info.joint_kd
 
             # dof_pos_target[:3] = 0 # NOTE: 腰暂时不要输出
 

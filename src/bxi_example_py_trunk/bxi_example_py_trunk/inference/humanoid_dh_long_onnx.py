@@ -67,7 +67,8 @@ class humanoid_dh_long_onnx_Agent(baseAgent):
         self.last_actions_buf = np.zeros(self.num_actions)
         self.inference_count = 0
         self.dt = 0.01
-        self.gait_period = 1.0
+        self.gait_period = 0.7
+        # self.gait_period = 1.0
         self.exp_filter = expFilter(0.6)
         self.bootstrap()
 
