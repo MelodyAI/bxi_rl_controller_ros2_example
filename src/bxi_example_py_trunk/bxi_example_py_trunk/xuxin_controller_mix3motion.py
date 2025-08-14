@@ -37,7 +37,7 @@ robot_name = "elf25"
 dof_num = 25
 dof_use = 12
 
-ankle_y_offset = -0.0 # +向后倒 -向前倒
+ankle_y_offset = +0.05 # +向后倒 -向前倒
 
 joint_name = (
     "waist_y_joint",
@@ -386,13 +386,15 @@ class BxiExample(Node):
                 "yaw_delta":np.array([yaw_delta,yaw_delta]),
                 "stand_height":np.array([self.stand_height]),
             }
-            dof_pos[7] -= ankle_y_offset
-            dof_pos[13] -= ankle_y_offset
+            # dof_pos[7] -= ankle_y_offset
+            # dof_pos[13] -= ankle_y_offset
             obs_group_12 = {
                 "dof_pos": dof_pos[index_isaac_in_mujoco_12_example],
                 "dof_vel": dof_vel[index_isaac_in_mujoco_12_example],
                 **obs_group,
             }
+            dof_pos[7] -= ankle_y_offset
+            dof_pos[13] -= ankle_y_offset
             obs_group_23 = {
                 "dof_pos": dof_pos[index_isaac_in_mujoco_23],
                 "dof_vel": dof_vel[index_isaac_in_mujoco_23],
@@ -419,6 +421,10 @@ class BxiExample(Node):
 
                         dof_pos_target = joint_nominal_pos.copy()
                         dof_pos_target[index_isaac_in_mujoco_23] = agent_out
+
+                        dof_pos_target[7] += ankle_y_offset
+                        dof_pos_target[13] += ankle_y_offset
+
                         joint_kp_send[index_isaac_in_mujoco_23] = joint_info_23.joint_kp
                         joint_kd_send[index_isaac_in_mujoco_23] = joint_info_23.joint_kd
                     else:
@@ -479,6 +485,10 @@ class BxiExample(Node):
 
                     dof_pos_target = joint_nominal_pos.copy()
                     dof_pos_target[index_isaac_in_mujoco_23] = agent_out
+
+                    dof_pos_target[7] += ankle_y_offset
+                    dof_pos_target[13] += ankle_y_offset
+
                     joint_kp_send[index_isaac_in_mujoco_23] = joint_info_23.joint_kp
                     joint_kd_send[index_isaac_in_mujoco_23] = joint_info_23.joint_kd
                 else:
@@ -500,6 +510,10 @@ class BxiExample(Node):
 
                     dof_pos_target = joint_nominal_pos.copy()
                     dof_pos_target[index_isaac_in_mujoco_23] = agent_out
+
+                    dof_pos_target[7] += ankle_y_offset
+                    dof_pos_target[13] += ankle_y_offset
+
                     joint_kp_send[index_isaac_in_mujoco_23] = joint_info_23.joint_kp
                     joint_kd_send[index_isaac_in_mujoco_23] = joint_info_23.joint_kd
                 else:
@@ -532,8 +546,8 @@ class BxiExample(Node):
             else:
                 raise Exception
 
-            dof_pos_target[7] += ankle_y_offset
-            dof_pos_target[13] += ankle_y_offset
+            # dof_pos_target[7] += ankle_y_offset
+            # dof_pos_target[13] += ankle_y_offset
 
             # 软限位
             # upper_limit = dof_pos + (torque_limit - dof_vel * joint_kd) / joint_kp
