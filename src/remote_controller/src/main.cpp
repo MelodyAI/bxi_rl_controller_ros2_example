@@ -241,25 +241,25 @@ private:
                         case JS_A_BT:{
                             const std::lock_guard<std::mutex> guard(lock_);
                             dance_toggle = !dance_toggle;
-                            printf("toggle far jump");
+                            printf("dance\n");
                         }
                         break;
                         case JS_X_BT:{
                             const std::lock_guard<std::mutex> guard(lock_);
                             far_jump_toggle = !far_jump_toggle;
-                            printf("toggle far jump");
+                            printf("far jump\n");
                         }
                         break;
                         case JS_Y_BT:{
                             const std::lock_guard<std::mutex> guard(lock_);
                             high_jump_toggle = !high_jump_toggle;
-                            printf("toggle far jump");
+                            printf("high jump\n");
                         }
                         break;
                         case JS_B_BT:{
                             const std::lock_guard<std::mutex> guard(lock_);
                             stop_btn_toggle = !stop_btn_toggle;
-                            printf("toggle far jump");
+                            printf("stop\n");
                         }
                         break;
                         default:
