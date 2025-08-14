@@ -214,10 +214,20 @@ class BxiExample(Node):
 
         elif self.state==robotState.motion:
             if self.motion_type == motionType.high_jump:
+                # 模式一 自动退出
+                # if not self.high_jump_agent.motion_playing:
+                #     self.stop_btn_changed = False
+                #     self.state=robotState.motion_to_stand
+                #     upper_body_current = self.qpos
+                #     upper_body_target = joint_nominal_pos
+                #     self.motion_to_stand_counter = recoverCounter(2.0/self.loop_dt, upper_body_current, upper_body_target)
+                #     self.walk_agent.reset()
+                #     print("state: motion_to_stand")
+                # 模式二 在蹲的姿态保持 不自动退出
                 if self.high_jump_btn_changed:
                     # 结束了之后不返回站立 连续跳
                     self.high_jump_btn_changed = False
-                    self.high_jump_agent.reset()
+                    # self.high_jump_agent.reset() # 不reset好一点
                     self.high_jump_agent.agent_count = 0.3 / self.high_jump_agent.motion_time_increment
                     self.high_jump_agent.motion_playing = True
                     print("state: motion [jump]")
@@ -523,7 +533,7 @@ class BxiExample(Node):
             self.stand_height = stand_height
 
             high_jump_btn = msg.btn_7 # Y
-            stop_btn = msg.btn_10 # B 
+            stop_btn = msg.btn_10 # B
             if self.step < 2:
                 self.high_jump_btn_prev = high_jump_btn
                 self.stop_btn_prev = stop_btn
