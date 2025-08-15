@@ -208,7 +208,7 @@ class BxiExample(Node):
                 self.stand_to_motion_counter = None
                 if self.motion_type == motionType.high_jump:
                     self.high_jump_agent.reset()
-                    # self.high_jump_agent.motion_playing = True # 进入蹲的姿势以后等待按键再跳
+                    self.high_jump_agent.motion_playing = True # 进入蹲的姿势以后等待按键再跳
                     print("state: motion [high jump]")
 
         elif self.state==robotState.motion:
@@ -216,8 +216,7 @@ class BxiExample(Node):
                 if self.high_jump_btn_changed:
                     # 结束了之后不返回站立 连续跳
                     self.high_jump_btn_changed = False
-                    # self.high_jump_agent.reset() # 不reset好一点
-                    self.high_jump_agent.agent_count = 0.3 / self.high_jump_agent.motion_time_increment
+                    self.high_jump_agent.reset() # 不reset好一点
                     self.high_jump_agent.motion_playing = True
                     print("state: motion [jump]")
                 if self.stop_btn_changed:

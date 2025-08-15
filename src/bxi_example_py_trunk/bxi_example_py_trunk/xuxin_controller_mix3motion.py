@@ -161,7 +161,7 @@ class BxiExample(Node):
         video_fps = 30
         # 跳远
         video_buffer_length = 165
-        motion_difficulty = 0.45 # [0.15, 0.65]
+        motion_difficulty = 0.35 # [0.15, 0.65]
         motion_time_increment = motion_agent_dt * video_fps / video_buffer_length
         self.far_jump_agent=humanoid_motion_tracking_Agent(self.policy_file_dict["far_jump"],
                                                             motion_time_increment, motion_difficulty, motion_range=[0.,0.66])

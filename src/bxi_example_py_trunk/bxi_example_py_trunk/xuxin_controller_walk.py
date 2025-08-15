@@ -219,6 +219,7 @@ class BxiExample(Node):
                 self.target_yaw += self.dyaw * self.loop_dt
             yaw_delta = (self.target_yaw - base_yaw) * ang_scale
             yaw_delta = (yaw_delta + np.pi) % (2*np.pi) - np.pi
+            yaw_vel_cmd = yaw_delta
 
             dof_pos_target = None
             joint_kp_send = joint_kp.copy()
