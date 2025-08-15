@@ -9,7 +9,8 @@ import json
 def generate_launch_description():
 
     policy_file_dict = {
-        "far_jump": "policy/0805_farjump_v2.onnx",
+        # "far_jump": "policy/0805_farjump_v2.onnx",
+        "far_jump": "policy/0815_farjump_dr.onnx",
         "walk_example_height": "policy/walk_example_height.onnx",
     }
     for key, value in policy_file_dict.items():
