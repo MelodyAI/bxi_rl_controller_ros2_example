@@ -212,7 +212,7 @@ private:
                         break;
                         case JS_START_BT:{
                             system("mkdir -p /var/log/bxi_log");
-                            system("ros2 launch bxi_example_py_ankle example_launch_hw.py > /var/log/bxi_log/$(date +%Y-%m-%d_%H-%M-%S)_elf.log  2>&1 &");
+                            system("ros2 launch bxi_example_py_trunk example_launch_mix3motion_hw.py > /var/log/bxi_log/$(date +%Y-%m-%d_%H-%M-%S)_elf.log  2>&1 &");
                             printf("run robot\n");//robot_controller
 
                             reset_value();

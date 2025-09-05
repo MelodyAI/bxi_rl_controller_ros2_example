@@ -245,7 +245,7 @@ class BxiExample(Node):
                 self.stand_to_motion_counter = None
                 if self.motion_type == motionType.high_jump:
                     self.high_jump_agent.reset()
-                    # self.high_jump_agent.motion_playing = True # 进入蹲的姿势以后等待按键再跳
+                    self.high_jump_agent.motion_playing = True # 进入蹲的姿势以后等待按键再跳
                     print("state: motion [high jump]")
                 if self.motion_type == motionType.far_jump:
                     self.far_jump_agent.reset()
