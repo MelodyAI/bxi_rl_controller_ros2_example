@@ -449,8 +449,8 @@ class BxiExample(Node):
             stand_height = max(stand_height, 1.0)
             self.stand_height = stand_height
 
-            left_btn = msg.btn_5 # A
-            right_btn = msg.btn_6 # X
+            left_btn = msg.btn_6 # X
+            right_btn = msg.btn_7 # Y
             stop_btn = msg.btn_10 # B
             if self.step < 2:
                 self.left_btn_prev = left_btn
