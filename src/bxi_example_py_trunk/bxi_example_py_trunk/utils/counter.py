@@ -31,8 +31,8 @@ class recoverCounter(Counter):
                  dof_pos_start,
                  dof_pos_end):
         super().__init__(all_steps)
-        self.dof_pos_start = dof_pos_start
-        self.dof_pos_end = dof_pos_end
+        self.dof_pos_start = dof_pos_start.copy()
+        self.dof_pos_end = dof_pos_end.copy()
 
     @property
     def current_dof_pos(self):

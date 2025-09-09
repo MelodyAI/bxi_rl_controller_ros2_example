@@ -49,6 +49,8 @@ setup(
         ('share/' + package_name + '/launch', ['launch/example_launch_far_jump_hw.py']),
         ('share/' + package_name + '/launch', ['launch/example_launch_dance.py']),
         ('share/' + package_name + '/launch', ['launch/example_launch_dance_hw.py']),
+        ('share/' + package_name + '/launch', ['launch/example_launch_hand.py']),
+        ('share/' + package_name + '/launch', ['launch/example_launch_hand_hw.py']),
         # ('share/' + package_name + '/launch', ['launch/example_launch_hw_slope.py']),
     ] + get_data_files(),
     install_requires=['setuptools'],
@@ -68,6 +70,7 @@ setup(
             'high_jump_controller = bxi_example_py_trunk.high_jump_controller:main',
             'far_jump_controller = bxi_example_py_trunk.far_jump_controller:main',
             'dance_controller = bxi_example_py_trunk.dance_controller:main',
+            'hand_controller = bxi_example_py_trunk.hand_controller:main',
         ],
     },
 )
